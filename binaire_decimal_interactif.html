@@ -1,0 +1,205 @@
+
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: var(--font-sans); }
+  .section { margin-bottom: 2rem; }
+  h2 { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 0.5rem; }
+  p.sub { font-size: 13px; color: var(--color-text-secondary); margin: 0 0 1rem; }
+
+  /* Tableau puissances */
+  .powers-table { display: flex; gap: 6px; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .power-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .power-label { font-size: 11px; color: var(--color-text-secondary); }
+  .power-val { font-size: 18px; font-weight: 500; color: var(--color-text-info); min-width: 40px; text-align: center; }
+  .power-bit { font-size: 11px; color: var(--color-text-tertiary); }
+
+  /* Bit buttons */
+  .bit-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+  .bit-btn {
+    width: 52px; height: 52px; border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-secondary);
+    background: var(--color-background-secondary);
+    font-size: 22px; font-weight: 500; cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: background 0.15s, color 0.15s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .bit-btn.on {
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+    border-color: var(--color-border-info);
+  }
+  .bit-small { font-size: 9px; font-weight: 400; color: var(--color-text-tertiary); }
+  .bit-btn.on .bit-small { color: var(--color-text-info); }
+
+  /* Résultat */
+  .result-box {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary);
+    padding: 1rem 1.25rem; text-align: center; margin-bottom: 1.5rem;
+  }
+  .result-formula { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; min-height: 16px; }
+  .result-number { font-size: 36px; font-weight: 500; color: var(--color-text-primary); }
+
+  /* Quiz */
+  .quiz-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1rem;
+  }
+  .quiz-bits { display: flex; gap: 5px; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .quiz-bit {
+    width: 36px; height: 36px; border-radius: 6px;
+    border: 0.5px solid var(--color-border-tertiary);
+    font-size: 18px; font-weight: 500; text-align: center; line-height: 36px;
+    background: var(--color-background-secondary); color: var(--color-text-primary);
+  }
+  .quiz-bit.hl { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+  .quiz-input-row { display: flex; gap: 10px; justify-content: center; align-items: center; margin-bottom: 0.75rem; }
+  .quiz-input { width: 100px; height: 38px; font-size: 18px; text-align: center; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .quiz-btn { padding: 8px 18px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 13px; cursor: pointer; }
+  .quiz-btn:hover { background: var(--color-background-tertiary); }
+  .feedback { font-size: 13px; font-weight: 500; min-height: 20px; text-align: center; }
+  .ok { color: var(--color-text-success); }
+  .ko { color: var(--color-text-danger); }
+  .score-bar { display: flex; gap: 12px; justify-content: center; font-size: 13px; color: var(--color-text-secondary); margin-top: 0.5rem; }
+  .score-val { font-weight: 500; color: var(--color-text-primary); }
+
+  /* DNB context */
+  .dnb-box {
+    background: var(--color-background-secondary);
+    border-left: 3px solid var(--color-border-info);
+    border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+    padding: 0.75rem 1rem; font-size: 13px; color: var(--color-text-secondary);
+    margin-bottom: 1.5rem;
+  }
+  .dnb-bits { display: flex; gap: 4px; justify-content: center; margin: 0.5rem 0 0.25rem; flex-wrap: wrap; }
+  .dnb-bit { width: 32px; height: 32px; border-radius: 4px; font-size: 15px; font-weight: 500; text-align: center; line-height: 32px; }
+</style>
+
+<div style="padding: 1rem 0;">
+
+  <!-- PARTIE 1 : principe -->
+  <div class="section">
+    <h2>1 — Le principe : chaque bit a une valeur</h2>
+    <p class="sub">Un octet = 8 bits. Chaque position a une valeur fixe (une puissance de 2). Clique sur les bits pour les activer !</p>
+    <div class="powers-table" id="powers"></div>
+    <div class="bit-row" id="bit-row"></div>
+    <div class="result-box">
+      <div class="result-formula" id="formula"></div>
+      <div class="result-number" id="decimal">0</div>
+    </div>
+  </div>
+
+  <!-- PARTIE 2 : application DNB -->
+  <div class="section">
+    <h2>2 — Exemple tiré du DNB</h2>
+    <p class="sub">Voici le pixel P du cycle 1 tel qu'il apparaît dans le sujet. Retrouve sa valeur décimale.</p>
+    <div class="dnb-box">
+      Pixel P (cycle 1) : codage sur un octet
+      <div class="dnb-bits" id="dnb-display"></div>
+      <div style="font-size:11px;text-align:center;color:var(--color-text-tertiary)">b8 → b1 (bit de poids fort → faible)</div>
+    </div>
+  </div>
+
+  <!-- PARTIE 3 : exercices -->
+  <div class="section">
+    <h2>3 — Entraîne-toi</h2>
+    <p class="sub">Convertis ce nombre binaire en décimal.</p>
+    <div class="quiz-card" id="quiz-card">
+      <div class="quiz-bits" id="quiz-bits"></div>
+      <div class="quiz-input-row">
+        <input class="quiz-input" id="quiz-input" type="number" min="0" max="255" placeholder="?" onkeydown="if(event.key==='Enter')checkAnswer()">
+        <button class="quiz-btn" onclick="checkAnswer()">Vérifier</button>
+        <button class="quiz-btn" onclick="nextQuestion()">Nouveau ↻</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <div class="score-bar">
+      Bonnes réponses : <span class="score-val" id="score-ok">0</span> / <span class="score-val" id="score-total">0</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const WEIGHTS = [128, 64, 32, 16, 8, 4, 2, 1];
+const bits = [0,0,0,0,0,0,0,0];
+
+// Partie 1 : tableau puissances
+const pTable = document.getElementById('powers');
+WEIGHTS.forEach((w,i) => {
+  pTable.innerHTML += `<div class="power-cell">
+    <div class="power-label">2<sup>${7-i}</sup></div>
+    <div class="power-val" id="pw-${i}">${w}</div>
+    <div class="power-bit">b${8-i}</div>
+  </div>`;
+});
+
+// Partie 1 : bits interactifs
+const bitRow = document.getElementById('bit-row');
+WEIGHTS.forEach((w,i) => {
+  const btn = document.createElement('button');
+  btn.className = 'bit-btn';
+  btn.id = `bit-${i}`;
+  btn.innerHTML = `<span>0</span><span class="bit-small">${w}</span>`;
+  btn.onclick = () => {
+    bits[i] ^= 1;
+    btn.querySelector('span').textContent = bits[i];
+    btn.classList.toggle('on', bits[i] === 1);
+    updateResult();
+  };
+  bitRow.appendChild(btn);
+});
+
+function updateResult() {
+  let total = 0;
+  const parts = [];
+  bits.forEach((b,i) => { if(b) { total += WEIGHTS[i]; parts.push(WEIGHTS[i]); } });
+  document.getElementById('decimal').textContent = total;
+  document.getElementById('formula').textContent = parts.length ? parts.join(' + ') + ' = ' + total : '(aucun bit actif)';
+}
+
+// Partie 2 : pixel DNB cycle 1 = 11000110 = 198
+const dnbBits = [1,1,0,0,0,1,1,0];
+const dnbDiv = document.getElementById('dnb-display');
+dnbBits.forEach(b => {
+  dnbDiv.innerHTML += `<div class="dnb-bit ${b?'hl':''}" style="background:${b?'var(--color-background-info)':'var(--color-background-secondary)'};color:${b?'var(--color-text-info)':'var(--color-text-secondary)'};border:0.5px solid var(--color-border-tertiary)">${b}</div>`;
+});
+dnbDiv.innerHTML += `<div style="font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;padding:0 6px;">= <strong style="color:var(--color-text-primary);margin-left:4px;">198</strong></div>`;
+
+// Partie 3 : quiz
+let quizBits = [], quizAnswer = 0, scoreOk = 0, scoreTotal = 0;
+
+function nextQuestion() {
+  quizBits = Array.from({length:8}, () => Math.round(Math.random()));
+  quizAnswer = quizBits.reduce((s,b,i) => s + b*WEIGHTS[i], 0);
+  const container = document.getElementById('quiz-bits');
+  container.innerHTML = '';
+  quizBits.forEach(b => {
+    container.innerHTML += `<div class="quiz-bit ${b?'hl':''}">${b}</div>`;
+  });
+  document.getElementById('quiz-input').value = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('quiz-input').focus();
+}
+
+function checkAnswer() {
+  const val = parseInt(document.getElementById('quiz-input').value);
+  if(isNaN(val)) return;
+  scoreTotal++;
+  document.getElementById('score-total').textContent = scoreTotal;
+  if(val === quizAnswer) {
+    scoreOk++;
+    document.getElementById('score-ok').textContent = scoreOk;
+    document.getElementById('feedback').textContent = '✓ Bravo ! ' + quizAnswer + ' est correct.';
+    document.getElementById('feedback').className = 'feedback ok';
+    setTimeout(nextQuestion, 1200);
+  } else {
+    document.getElementById('feedback').textContent = '✗ Pas tout à fait. La réponse était ' + quizAnswer + '.';
+    document.getElementById('feedback').className = 'feedback ko';
+  }
+}
+
+nextQuestion();
+</script>
