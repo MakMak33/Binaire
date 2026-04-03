@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binaire — Exercices d'entraînement</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #f7f6f2;
+  --surface: #ffffff;
+  --surface2:#f0ede8;
+  --surface3:#e8e4de;
+  --accent:  #2563eb;
+  --accent-l:#dbeafe;
+  --accent-d:#1e40af;
+  --ok:      #16a34a;
+  --ok-l:    #dcfce7;
+  --err:     #dc2626;
+  --err-l:   #fee2e2;
+  --warn:    #d97706;
+  --warn-l:  #fef3c7;
+  --text:    #1c1917;
+  --text2:   #57534e;
+  --text3:   #a8a29e;
+  --border:  rgba(0,0,0,0.09);
+  --border2: rgba(0,0,0,0.16);
+  --radius:  10px;
+  --radius-lg: 16px;
+  --shadow:  0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #141412;
+    --surface: #1e1d1a;
+    --surface2:#272522;
+    --surface3:#302e2a;
+    --accent:  #3b82f6;
+    --accent-l:#1e3a5f;
+    --accent-d:#93c5fd;
+    --ok:      #22c55e;
+    --ok-l:    #14532d;
+    --err:     #f87171;
+    --err-l:   #7f1d1d;
+    --warn:    #fbbf24;
+    --warn-l:  #78350f;
+    --text:    #e7e5e4;
+    --text2:   #a8a29e;
+    --text3:   #57534e;
+    --border:  rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+  }
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem 1rem 3rem;
+  line-height: 1.6;
+}
+
+.page { max-width: 720px; margin: 0 auto; }
+
+/* Header */
+.page-header { text-align: center; margin-bottom: 2.5rem; }
+.page-header h1 {
+  font-family: 'Georgia', serif;
+  font-size: 28px; font-weight: normal;
+  color: var(--text); letter-spacing: -.3px;
+  margin-bottom: .35rem;
+}
+.page-header p { font-size: 14px; color: var(--text2); font-style: italic; }
+
+/* Nav tabs */
+.nav-tabs {
+  display: flex; gap: 6px; margin-bottom: 1.75rem;
+  border-bottom: 1.5px solid var(--border2); padding-bottom: 0;
+}
+.nav-tab {
+  padding: 8px 18px; font-size: 13px; font-family: sans-serif;
+  border: none; background: none; color: var(--text2);
+  cursor: pointer; border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px; transition: color .15s, border-color .15s;
+  border-radius: 0;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* Panels */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Card */
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 15px; font-weight: normal; font-family: sans-serif;
+  color: var(--text); margin-bottom: .25rem;
+}
+.card-sub {
+  font-size: 12px; color: var(--text2);
+  font-family: sans-serif; margin-bottom: 1rem; font-style: normal;
+}
+
+/* ── PANEL 1: Explorateur de bits ── */
+.weights-row {
+  display: flex; justify-content: center; gap: 0;
+  margin-bottom: .25rem; flex-wrap: wrap;
+}
+.w-cell {
+  display: flex; flex-direction: column; align-items: center;
+  width: 72px; padding: 4px 2px;
+}
+.w-exp { font-size: 10px; color: var(--text3); font-family: sans-serif; }
+.w-val { font-size: 20px; font-weight: 500; color: var(--accent); font-family: sans-serif; }
+.w-bit { font-size: 10px; color: var(--text3); font-family: sans-serif; }
+
+.bits-row {
+  display: flex; justify-content: center; gap: 6px;
+  margin: .75rem 0; flex-wrap: wrap;
+}
+.bit-btn {
+  width: 64px; height: 56px;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  background: var(--surface2); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; transition: .12s; user-select: none;
+}
+.bit-btn:hover { background: var(--surface3); }
+.bit-btn .b-val { font-size: 22px; font-weight: 500; font-family: sans-serif; color: var(--text2); }
+.bit-btn .b-sub { font-size: 9px; color: var(--text3); font-family: sans-serif; }
+.bit-btn.on { background: var(--accent-l); border-color: var(--accent); }
+.bit-btn.on .b-val { color: var(--accent-d); }
+.bit-btn.on .b-sub { color: var(--accent); }
+
+.result-box {
+  background: var(--surface2); border-radius: var(--radius);
+  border: 0.5px solid var(--border); padding: 1rem;
+  text-align: center; margin-top: .5rem;
+}
+.result-formula { font-size: 12px; color: var(--text2); font-family: sans-serif; min-height: 16px; margin-bottom: 4px; }
+.result-num { font-size: 40px; font-weight: normal; font-family: 'Georgia', serif; color: var(--text); }
+
+/* ── PANEL 2: Quiz binaire → décimal ── */
+.quiz-bits-row {
+  display: flex; gap: 5px; justify-content: center;
+  margin-bottom: 1rem; flex-wrap: wrap;
+}
+.qbit {
+  width: 52px; height: 44px; border-radius: 8px;
+  border: 0.5px solid var(--border); font-size: 20px; font-weight: 500;
+  text-align: center; line-height: 44px; font-family: sans-serif;
+  background: var(--surface2); color: var(--text);
+}
+.qbit.on { background: var(--accent-l); color: var(--accent-d); border-color: var(--accent); }
+.qbit.correct { background: var(--ok-l); color: var(--ok); border-color: var(--ok); }
+.qbit.wrong   { background: var(--err-l); color: var(--err); border-color: var(--err); }
+
+.q-labels {
+  display: flex; gap: 5px; justify-content: center;
+  margin-bottom: .5rem; flex-wrap: wrap;
+}
+.q-label { width: 52px; text-align: center; font-size: 10px; color: var(--text3); font-family: sans-serif; }
+
+.input-row {
+  display: flex; gap: 8px; justify-content: center;
+  align-items: center; margin-bottom: .75rem; flex-wrap: wrap;
+}
+.num-input {
+  width: 110px; height: 42px; font-size: 20px; text-align: center;
+  border-radius: var(--radius); border: 1px solid var(--border2);
+  background: var(--surface2); color: var(--text);
+  font-family: 'Georgia', serif; outline: none;
+}
+.num-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+
+.btn {
+  padding: 9px 20px; border-radius: var(--radius);
+  border: 1px solid var(--border2); background: var(--surface2);
+  color: var(--text); font-size: 13px; font-family: sans-serif;
+  cursor: pointer; transition: .12s;
+}
+.btn:hover { background: var(--surface3); }
+.btn-primary {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.btn-primary:hover { opacity: .9; }
+
+.feedback {
+  text-align: center; font-size: 13px; font-weight: 500;
+  font-family: sans-serif; min-height: 20px; margin-bottom: .5rem;
+}
+.fb-ok   { color: var(--ok); }
+.fb-ko   { color: var(--err); }
+.fb-hint { color: var(--warn); }
+
+.score-row {
+  display: flex; gap: 10px; justify-content: center;
+  font-size: 12px; color: var(--text2); font-family: sans-serif;
+}
+.score-n { font-weight: 500; color: var(--text); font-size: 14px; }
+
+/* ── PANEL 3: Lecture de courbe ── */
+canvas { display: block; width: 100%; height: 170px; }
+.curve-labels {
+  display: flex; justify-content: space-between;
+  padding: 0 28px; margin-top: 3px; margin-bottom: .75rem;
+}
+.curve-labels span { font-size: 10px; color: var(--text3); font-family: sans-serif; }
+
+.answer-bits {
+  display: flex; gap: 5px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: .5rem;
+}
+.ans-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.ans-lbl { font-size: 10px; color: var(--text3); font-family: sans-serif; }
+.ans-btn {
+  width: 46px; height: 42px; border-radius: 8px;
+  border: 1px solid var(--border2); background: var(--surface2);
+  font-size: 18px; font-weight: 500; cursor: pointer; font-family: sans-serif;
+  color: var(--text2); display: flex; align-items: center; justify-content: center;
+  transition: .12s; user-select: none;
+}
+.ans-btn:hover { background: var(--surface3); }
+.ans-btn.on      { background: var(--accent-l); color: var(--accent-d); border-color: var(--accent); }
+.ans-btn.correct { background: var(--ok-l);     color: var(--ok);       border-color: var(--ok); }
+.ans-btn.wrong   { background: var(--err-l);    color: var(--err);      border-color: var(--err); }
+
+.dec-display {
+  text-align: center; font-family: sans-serif;
+  font-size: 13px; color: var(--text2); margin: .5rem 0;
+}
+.dec-display strong { font-size: 20px; color: var(--text); font-family: 'Georgia', serif; }
+
+.mode-row { display: flex; gap: 6px; margin-bottom: .75rem; flex-wrap: wrap; }
+.mode-btn {
+  padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--border2); background: var(--surface2);
+  font-size: 12px; font-family: sans-serif; color: var(--text2); cursor: pointer;
+  transition: .12s;
+}
+.mode-btn:hover { background: var(--surface3); }
+.mode-btn.active { background: var(--accent-l); color: var(--accent-d); border-color: var(--accent); }
+
+/* Progress dots */
+.progress-dots {
+  display: flex; gap: 6px; justify-content: center; margin-bottom: 1.5rem;
+}
+.dot {
+  width: 28px; height: 4px; border-radius: 2px;
+  background: var(--surface3); transition: background .2s;
+}
+.dot.done { background: var(--ok); }
+.dot.active { background: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>Numération binaire</h1>
+    <p>Exercices d'entraînement — Technologie 3ème</p>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPanel('p1',this)">Explorateur de bits</button>
+    <button class="nav-tab" onclick="showPanel('p2',this)">Binaire → Décimal</button>
+    <button class="nav-tab" onclick="showPanel('p3',this)">Lire une courbe</button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 1 — Explorateur de bits
+  ══════════════════════════════════════════ -->
+  <div id="p1" class="panel active">
+    <div class="card">
+      <p class="card-title">Chaque bit a une valeur fixe</p>
+      <p class="card-sub">Clique sur les cases pour activer ou désactiver chaque bit. La valeur décimale se calcule automatiquement.</p>
+
+      <div class="weights-row" id="exp-weights"></div>
+      <div class="bits-row" id="exp-bits"></div>
+      <div class="result-box">
+        <div class="result-formula" id="exp-formula">Aucun bit actif</div>
+        <div class="result-num" id="exp-decimal">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">Mémo — Puissances de 2</p>
+      <p class="card-sub">À connaître par cœur pour lire n'importe quel octet.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-family:sans-serif;">
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2⁷</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">128</div>
+          <div style="font-size:10px;color:var(--text3)">b8</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2⁶</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">64</div>
+          <div style="font-size:10px;color:var(--text3)">b7</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2⁵</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">32</div>
+          <div style="font-size:10px;color:var(--text3)">b6</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2⁴</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">16</div>
+          <div style="font-size:10px;color:var(--text3)">b5</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2³</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">8</div>
+          <div style="font-size:10px;color:var(--text3)">b4</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2²</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">4</div>
+          <div style="font-size:10px;color:var(--text3)">b3</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2¹</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">2</div>
+          <div style="font-size:10px;color:var(--text3)">b2</div>
+        </div>
+        <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text3)">2⁰</div>
+          <div style="font-size:22px;font-weight:500;color:var(--accent)">1</div>
+          <div style="font-size:10px;color:var(--text3)">b1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 2 — Quiz binaire → décimal
+  ══════════════════════════════════════════ -->
+  <div id="p2" class="panel">
+    <div class="card">
+      <p class="card-title">Lis le nombre binaire, trouve sa valeur décimale</p>
+      <p class="card-sub">Les bits bleus valent 1, les gris valent 0. Additionne les valeurs des bits actifs.</p>
+
+      <div class="q-labels" id="q2-labels"></div>
+      <div class="quiz-bits-row" id="q2-bits"></div>
+      <div class="input-row">
+        <input class="num-input" id="q2-input" type="number" min="0" max="255" placeholder="?"
+          onkeydown="if(event.key==='Enter')q2Check()">
+        <button class="btn btn-primary" onclick="q2Check()">Vérifier</button>
+        <button class="btn" onclick="q2Next()">Nouveau ↻</button>
+      </div>
+      <div class="feedback" id="q2-feedback"></div>
+      <div class="score-row">
+        Score&nbsp;: <span class="score-n" id="q2-ok">0</span>&nbsp;/&nbsp;<span class="score-n" id="q2-tot">0</span>
+      </div>
+    </div>
+
+    <div class="card" id="q2-hint-card" style="display:none">
+      <p class="card-title" style="color:var(--ok)">Méthode de calcul</p>
+      <div id="q2-hint" style="font-family:sans-serif;font-size:13px;color:var(--text2);line-height:1.8"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 3 — Lecture de courbe
+  ══════════════════════════════════════════ -->
+  <div id="p3" class="panel">
+    <div class="card">
+      <p class="card-title">Lis les niveaux logiques sur la courbe</p>
+      <p class="card-sub">La courbe monte à 1 ou reste à 0 pour chaque bit (b8 → b1). Clique sur chaque case pour noter ta réponse.</p>
+
+      <div class="mode-row">
+        <button class="mode-btn active" id="mb-rand" onclick="p3SetMode('random',this)">Aléatoire</button>
+        <button class="mode-btn" id="mb-c1" onclick="p3SetMode('c1',this)">Exemple A</button>
+        <button class="mode-btn" id="mb-c2" onclick="p3SetMode('c2',this)">Exemple B</button>
+      </div>
+
+      <canvas id="p3-canvas"></canvas>
+      <div class="curve-labels">
+        <span>b8</span><span>b7</span><span>b6</span><span>b5</span>
+        <span>b4</span><span>b3</span><span>b2</span><span>b1</span>
+      </div>
+
+      <div class="answer-bits" id="p3-bits"></div>
+      <div class="dec-display" id="p3-dec">Valeur décimale — <strong>—</strong></div>
+
+      <div class="input-row" style="margin-top:.5rem">
+        <button class="btn btn-primary" onclick="p3Check()">Vérifier</button>
+        <button class="btn" onclick="p3Solution()">Solution</button>
+        <button class="btn" onclick="p3Next()">Nouvelle courbe ↻</button>
+      </div>
+      <div class="feedback" id="p3-feedback"></div>
+      <div class="score-row" style="margin-top:.5rem">
+        Score&nbsp;: <span class="score-n" id="p3-ok">0</span>&nbsp;/&nbsp;<span class="score-n" id="p3-tot">0</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const W = [128,64,32,16,8,4,2,1];
+
+/* ── navigation ── */
+function showPanel(id, tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  tab.classList.add('active');
+}
+
+/* ══════════════════════════
+   PANEL 1 — Explorateur
+══════════════════════════ */
+const expBits = [0,0,0,0,0,0,0,0];
+const expW = document.getElementById('exp-weights');
+const expB = document.getElementById('exp-bits');
+
+W.forEach((w,i) => {
+  expW.innerHTML += `<div class="w-cell">
+    <div class="w-exp">2<sup>${7-i}</sup></div>
+    <div class="w-val">${w}</div>
+    <div class="w-bit">b${8-i}</div>
+  </div>`;
+  const btn = document.createElement('div');
+  btn.className = 'bit-btn';
+  btn.id = 'eb-'+i;
+  btn.innerHTML = `<span class="b-val">0</span><span class="b-sub">${w}</span>`;
+  btn.onclick = () => {
+    expBits[i] ^= 1;
+    btn.querySelector('.b-val').textContent = expBits[i];
+    btn.classList.toggle('on', expBits[i]===1);
+    expUpdate();
+  };
+  expB.appendChild(btn);
+});
+
+function expUpdate() {
+  let tot = 0; const parts = [];
+  expBits.forEach((b,i) => { if(b){ tot += W[i]; parts.push(W[i]); }});
+  document.getElementById('exp-decimal').textContent = tot;
+  document.getElementById('exp-formula').textContent =
+    parts.length ? parts.join(' + ') + ' = ' + tot : 'Aucun bit actif';
+}
+
+/* ══════════════════════════
+   PANEL 2 — Quiz
+══════════════════════════ */
+let q2Bits=[], q2Answer=0, q2Ok=0, q2Tot=0, q2Done=false;
+
+const lblRow = document.getElementById('q2-labels');
+W.forEach((_,i) => { lblRow.innerHTML += `<div class="q-label">b${8-i}</div>`; });
+
+function q2Next() {
+  q2Done = false;
+  q2Bits = Array.from({length:8}, () => Math.round(Math.random()));
+  q2Answer = q2Bits.reduce((s,b,i) => s+b*W[i], 0);
+  const row = document.getElementById('q2-bits');
+  row.innerHTML = '';
+  q2Bits.forEach(b => {
+    row.innerHTML += `<div class="qbit ${b?'on':''}">${b}</div>`;
+  });
+  document.getElementById('q2-input').value = '';
+  document.getElementById('q2-feedback').textContent = '';
+  document.getElementById('q2-feedback').className = 'feedback';
+  document.getElementById('q2-hint-card').style.display = 'none';
+  document.getElementById('q2-input').focus();
+}
+
+function q2Check() {
+  if(q2Done) return;
+  const v = parseInt(document.getElementById('q2-input').value);
+  if(isNaN(v)) return;
+  q2Done = true; q2Tot++;
+  document.getElementById('q2-tot').textContent = q2Tot;
+  const fb = document.getElementById('q2-feedback');
+  if(v === q2Answer) {
+    q2Ok++;
+    document.getElementById('q2-ok').textContent = q2Ok;
+    fb.textContent = 'Correct ! ' + q2Answer + ' en décimal.';
+    fb.className = 'feedback fb-ok';
+    setTimeout(q2Next, 1400);
+  } else {
+    fb.textContent = 'Pas tout à fait — la bonne réponse est ' + q2Answer + '.';
+    fb.className = 'feedback fb-ko';
+    q2ShowHint();
+  }
+}
+
+function q2ShowHint() {
+  const parts = [];
+  q2Bits.forEach((b,i) => { if(b) parts.push(`${W[i]}`); });
+  const expr = parts.join(' + ') + ' = ' + q2Answer;
+  document.getElementById('q2-hint').innerHTML =
+    `<strong>Détail :</strong> ${q2Bits.join('')}<br>` +
+    parts.map((p,i) => `bit actif → ${p}`).join(' &nbsp;+&nbsp; ') +
+    `<br><strong>${expr}</strong>`;
+  document.getElementById('q2-hint-card').style.display = 'block';
+}
+
+q2Next();
+
+/* ══════════════════════════
+   PANEL 3 — Courbe
+══════════════════════════ */
+let p3Target=[], p3User=[], p3Mode='random', p3Ok=0, p3Tot=0, p3Done=false;
+
+function p3SetMode(m, btn) {
+  p3Mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  p3Next();
+}
+
+function p3Next() {
+  p3Done = false;
+  if(p3Mode==='c1')      p3Target=[1,1,0,0,0,1,1,0];
+  else if(p3Mode==='c2') p3Target=[0,1,1,0,1,1,1,0];
+  else                   p3Target=Array.from({length:8},()=>Math.round(Math.random()));
+  p3User = Array(8).fill(0);
+  p3DrawCurve(p3Target);
+  p3BuildBits();
+  p3UpdateDec();
+  document.getElementById('p3-feedback').textContent='';
+  document.getElementById('p3-feedback').className='feedback';
+}
+
+function p3DrawCurve(bits) {
+  const canvas = document.getElementById('p3-canvas');
+  const dpr = window.devicePixelRatio || 1;
+  const cw = canvas.offsetWidth || 600;
+  const ch = 170;
+  canvas.width = cw*dpr; canvas.height = ch*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const dark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const gridC = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const labelC = dark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)';
+  const lineC = dark ? '#3b82f6' : '#2563eb';
+
+  const pL=34, pR=12, pT=18, pB=24;
+  const gW=cw-pL-pR, gH=ch-pT-pB;
+  const step=gW/8;
+
+  ctx.clearRect(0,0,cw,ch);
+
+  ctx.strokeStyle=gridC; ctx.lineWidth=0.5;
+  [0,1].forEach(v => {
+    const y=pT+(1-v)*gH;
+    ctx.beginPath(); ctx.moveTo(pL,y); ctx.lineTo(pL+gW,y); ctx.stroke();
+  });
+  for(let i=0;i<=8;i++){
+    const x=pL+i*step;
+    ctx.beginPath(); ctx.moveTo(x,pT); ctx.lineTo(x,pT+gH); ctx.stroke();
+  }
+
+  ctx.fillStyle=labelC; ctx.font=`11px sans-serif`;
+  ctx.textAlign='right';
+  ctx.fillText('1',pL-5,pT+5);
+  ctx.fillText('0',pL-5,pT+gH+5);
+
+  ctx.strokeStyle=lineC; ctx.lineWidth=2.5; ctx.lineJoin='round';
+  ctx.beginPath();
+  bits.forEach((b,i) => {
+    const x=pL+i*step;
+    const y=pT+(1-b)*gH;
+    if(i===0){ ctx.moveTo(x,y); return; }
+    const prevY=pT+(1-bits[i-1])*gH;
+    ctx.lineTo(x,prevY); ctx.lineTo(x,y);
+  });
+  ctx.lineTo(pL+8*step, pT+(1-bits[7])*gH);
+  ctx.stroke();
+}
+
+function p3BuildBits() {
+  const row = document.getElementById('p3-bits');
+  row.innerHTML='';
+  for(let i=0;i<8;i++){
+    const slot=document.createElement('div');
+    slot.className='ans-slot';
+    const lbl=document.createElement('div');
+    lbl.className='ans-lbl'; lbl.textContent='b'+(8-i);
+    const btn=document.createElement('div');
+    btn.className='ans-btn'; btn.id='ab-'+i; btn.textContent='0';
+    btn.onclick=()=>p3Toggle(i);
+    slot.appendChild(lbl); slot.appendChild(btn);
+    row.appendChild(slot);
+  }
+}
+
+function p3Toggle(i){
+  if(p3Done) return;
+  p3User[i]^=1;
+  const btn=document.getElementById('ab-'+i);
+  btn.textContent=p3User[i];
+  btn.classList.toggle('on',p3User[i]===1);
+  p3UpdateDec();
+}
+
+function p3UpdateDec(){
+  const tot=p3User.reduce((s,b,i)=>s+b*W[i],0);
+  const any=p3User.some(b=>b===1);
+  document.getElementById('p3-dec').innerHTML =
+    'Valeur décimale — <strong>'+(any?tot:'—')+'</strong>';
+}
+
+function p3Check(){
+  if(p3Done) return;
+  p3Done=true; p3Tot++;
+  document.getElementById('p3-tot').textContent=p3Tot;
+  let ok=true;
+  for(let i=0;i<8;i++){
+    const btn=document.getElementById('ab-'+i);
+    btn.classList.remove('on','wrong','correct');
+    if(p3User[i]===p3Target[i]) btn.classList.add('correct');
+    else { btn.classList.add('wrong'); ok=false; }
+  }
+  const dec=p3Target.reduce((s,b,i)=>s+b*W[i],0);
+  document.getElementById('p3-dec').innerHTML='Valeur décimale — <strong>'+dec+'</strong>';
+  const fb=document.getElementById('p3-feedback');
+  if(ok){
+    p3Ok++; document.getElementById('p3-ok').textContent=p3Ok;
+    fb.textContent='Correct ! '+p3Target.join('')+' = '+dec;
+    fb.className='feedback fb-ok';
+  } else {
+    fb.textContent='Incorrect — bonne réponse : '+p3Target.join('')+' = '+dec;
+    fb.className='feedback fb-ko';
+  }
+}
+
+function p3Solution(){
+  p3Done=true;
+  for(let i=0;i<8;i++){
+    const btn=document.getElementById('ab-'+i);
+    btn.textContent=p3Target[i];
+    btn.classList.remove('on','wrong');
+    btn.classList.add('correct');
+  }
+  const dec=p3Target.reduce((s,b,i)=>s+b*W[i],0);
+  document.getElementById('p3-dec').innerHTML='Valeur décimale — <strong>'+dec+'</strong>';
+  const fb=document.getElementById('p3-feedback');
+  fb.textContent='Solution : '+p3Target.join('')+' = '+dec;
+  fb.className='feedback fb-hint';
+}
+
+window.addEventListener('resize',()=>{ if(p3Target.length) p3DrawCurve(p3Target); });
+p3Next();
+</script>
+</body>
+</html>
