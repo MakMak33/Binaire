@@ -1,0 +1,517 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.app { padding: 1rem 0; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+.header p { font-size: 14px; color: var(--color-text-secondary); }
+.tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab { padding: 6px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); font-size: 13px; cursor: pointer; background: var(--color-background-primary); color: var(--color-text-secondary); transition: all 0.15s; }
+.tab.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+.score-bar { display: flex; gap: 12px; margin-bottom: 1.5rem; }
+.score-card { flex: 1; background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 14px; }
+.score-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.score-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.question-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+.q-num { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.q-text { font-size: 15px; color: var(--color-text-primary); line-height: 1.5; margin-bottom: 1rem; font-weight: 500; }
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option { padding: 10px 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 14px; color: var(--color-text-primary); background: var(--color-background-primary); transition: all 0.15s; text-align: left; }
+.option:hover:not(.disabled) { background: var(--color-background-secondary); }
+.option.correct { background: var(--color-background-success); border-color: var(--color-border-success); color: var(--color-text-success); }
+.option.wrong { background: var(--color-background-danger); border-color: var(--color-border-danger); color: var(--color-text-danger); }
+.option.disabled { cursor: default; }
+.feedback { margin-top: 10px; padding: 10px 14px; border-radius: var(--border-radius-md); font-size: 13px; line-height: 1.5; }
+.feedback.correct { background: var(--color-background-success); color: var(--color-text-success); }
+.feedback.wrong { background: var(--color-background-danger); color: var(--color-text-danger); }
+.nav-btn { margin-top: 1rem; padding: 8px 20px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 14px; background: var(--color-background-primary); color: var(--color-text-primary); }
+.nav-btn:hover { background: var(--color-background-secondary); }
+.fill-input { width: 100%; padding: 8px 12px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 14px; color: var(--color-text-primary); background: var(--color-background-primary); margin-bottom: 8px; }
+.submit-btn { padding: 8px 16px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); cursor: pointer; font-size: 14px; background: var(--color-background-primary); color: var(--color-text-primary); }
+.submit-btn:hover { background: var(--color-background-secondary); }
+.result-screen { text-align: center; padding: 2rem 1rem; }
+.result-score { font-size: 48px; font-weight: 500; color: var(--color-text-primary); }
+.result-label { font-size: 16px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+.result-mention { font-size: 14px; padding: 8px 20px; border-radius: var(--border-radius-md); display: inline-block; margin-bottom: 1.5rem; }
+.match-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.match-left { flex: 1; padding: 8px 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); font-size: 13px; color: var(--color-text-primary); }
+.match-select { flex: 1; padding: 8px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); }
+.match-select.correct-sel { border-color: var(--color-border-success); background: var(--color-background-success); color: var(--color-text-success); }
+.match-select.wrong-sel { border-color: var(--color-border-danger); background: var(--color-background-danger); color: var(--color-text-danger); }
+.progress { height: 4px; background: var(--color-border-tertiary); border-radius: 2px; margin-bottom: 1.5rem; }
+.progress-fill { height: 100%; border-radius: 2px; background: #378ADD; transition: width 0.3s; }
+</style>
+
+<div class="app" id="app">
+  <div class="header">
+    <h1>Comment fonctionne Internet et le réseau du collège ?</h1>
+    <p>Entraîne-toi avant l'examen — toutes les notions vues en cours</p>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="score-bar">
+    <div class="score-card"><div class="score-label">Score</div><div class="score-val" id="score-display">0 / 10</div></div>
+    <div class="score-card"><div class="score-label">Bonnes réponses</div><div class="score-val" id="correct-display">0</div></div>
+    <div class="score-card"><div class="score-label">Question</div><div class="score-val" id="qnum-display">— / —</div></div>
+  </div>
+  <div class="progress"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div id="content"></div>
+</div>
+
+<script>
+const rawModules = [
+  {
+    id: "qcm",
+    label: "QCM",
+    questions: [
+      {
+        type: "qcm",
+        q: "Qu'est-ce qu'un réseau local (LAN) ?",
+        opts: ["Un réseau couvrant le monde entier", "Un ensemble d'appareils interconnectés dans un espace limité (collège, maison)", "Un protocole de communication", "Un type de câble réseau"],
+        correct: 1,
+        feedback: "Un LAN (Local Area Network) est un réseau local qui relie des appareils dans un espace géographique limité, comme un collège ou une maison."
+      },
+      {
+        type: "qcm",
+        q: "Quel équipement relie plusieurs appareils dans un réseau local et distribue les données entre eux ?",
+        opts: ["Le routeur", "Le switch (commutateur)", "La box internet", "Le serveur DNS"],
+        correct: 1,
+        feedback: "Le switch (commutateur) relie les appareils au sein d'un réseau local et distribue les données uniquement vers l'appareil destinataire."
+      },
+      {
+        type: "qcm",
+        q: "Quel est le rôle principal d'un routeur ?",
+        opts: ["Afficher des pages web", "Relier plusieurs réseaux et diriger les données vers leur destination", "Stocker les fichiers des élèves", "Convertir le Wi-Fi en câble Ethernet"],
+        correct: 1,
+        feedback: "Le routeur interconnecte plusieurs réseaux (ex : réseau local du collège et Internet) et dirige les paquets de données vers leur destination."
+      },
+      {
+        type: "qcm",
+        q: "Pourquoi les données sont-elles découpées en paquets lors d'une transmission sur Internet ?",
+        opts: ["Pour économiser de l'électricité", "Pour que chaque paquet puisse emprunter le chemin le plus rapide et être réassemblé à destination", "Pour compresser les fichiers", "Pour éviter les virus"],
+        correct: 1,
+        feedback: "Le découpage en paquets optimise le réseau : chaque paquet peut prendre un chemin différent, et si un paquet est perdu, seul celui-là est retransmis."
+      },
+      {
+        type: "qcm",
+        q: "Qu'est-ce qu'une adresse IP ?",
+        opts: ["Un mot de passe pour accéder à Internet", "Un identifiant numérique unique attribué à chaque appareil sur un réseau", "Le nom d'un site web", "Un type de câble réseau"],
+        correct: 1,
+        feedback: "L'adresse IP est un identifiant numérique unique qui permet d'identifier chaque appareil sur un réseau, comme une adresse postale pour les données."
+      },
+      {
+        type: "qcm",
+        q: "Quel protocole est utilisé pour la navigation sur le Web ?",
+        opts: ["FTP", "HTTP/HTTPS", "SMTP", "IP"],
+        correct: 1,
+        feedback: "HTTP (et sa version sécurisée HTTPS) est le protocole utilisé pour échanger des pages web entre un serveur et un navigateur."
+      },
+      {
+        type: "qcm",
+        q: "Qu'est-ce qu'un protocole réseau ?",
+        opts: ["Un câble spécial pour relier les ordinateurs", "Un ensemble de règles définissant comment les données sont envoyées et reçues sur un réseau", "Un logiciel antivirus", "Un type de connexion Wi-Fi"],
+        correct: 1,
+        feedback: "Un protocole est un ensemble de règles et de conventions que tous les appareils respectent pour communiquer entre eux sur un réseau."
+      },
+      {
+        type: "qcm",
+        q: "Quelle est la différence entre une connexion filaire (Ethernet) et une connexion sans fil (Wi-Fi) ?",
+        opts: ["L'Ethernet est plus lent que le Wi-Fi", "L'Ethernet utilise un câble et est plus stable ; le Wi-Fi utilise des ondes radio et offre plus de mobilité", "Le Wi-Fi ne peut pas accéder à Internet", "L'Ethernet est uniquement pour les imprimantes"],
+        correct: 1,
+        feedback: "L'Ethernet relie physiquement l'appareil par câble (plus stable et rapide), tandis que le Wi-Fi utilise des ondes radio (plus de mobilité mais plus sensible aux interférences)."
+      },
+      {
+        type: "qcm",
+        q: "Qu'est-ce qu'Internet ?",
+        opts: ["Un seul ordinateur très puissant", "Un réseau mondial constitué de millions de réseaux interconnectés", "Un logiciel installé sur les ordinateurs", "Le réseau local du collège"],
+        correct: 1,
+        feedback: "Internet est un réseau mondial qui relie des millions de réseaux locaux et d'ordinateurs à travers la planète."
+      },
+      {
+        type: "qcm",
+        q: "Quel est l'impact environnemental du numérique ?",
+        opts: ["Le numérique est neutre en carbone", "Le numérique consomme de l'énergie et des ressources (data centers, fabrication d'appareils, réseaux) et produit des émissions de CO₂", "Seuls les smartphones ont un impact", "Il n'y a pas d'impact car tout est immatériel"],
+        correct: 1,
+        feedback: "Le numérique a un impact environnemental significatif : fabrication des appareils, consommation électrique des data centers et des réseaux représentent une part croissante des émissions mondiales."
+      }
+    ]
+  },
+  {
+    id: "vrai-faux",
+    label: "Vrai / Faux",
+    questions: [
+      {
+        type: "qcm",
+        q: "Un switch permet de connecter le réseau local à Internet.",
+        opts: ["Vrai", "Faux"],
+        correct: 1,
+        feedback: "FAUX. C'est le routeur qui connecte le réseau local à Internet. Le switch relie les appareils entre eux à l'intérieur du réseau local."
+      },
+      {
+        type: "qcm",
+        q: "Les données circulent sur Internet sous forme de paquets.",
+        opts: ["Vrai", "Faux"],
+        correct: 0,
+        feedback: "VRAI. Sur Internet, les données sont découpées en petits paquets qui transitent indépendamment et sont réassemblés à destination."
+      },
+      {
+        type: "qcm",
+        q: "L'adresse IP d'un appareil est toujours la même, quelle que soit sa connexion.",
+        opts: ["Vrai", "Faux"],
+        correct: 1,
+        feedback: "FAUX. L'adresse IP peut changer selon le réseau auquel on est connecté. On distingue adresse IP publique (attribuée par le FAI) et privée (au sein du réseau local)."
+      },
+      {
+        type: "qcm",
+        q: "Le Wi-Fi utilise des câbles pour transmettre les données.",
+        opts: ["Vrai", "Faux"],
+        correct: 1,
+        feedback: "FAUX. Le Wi-Fi utilise des ondes radio pour transmettre les données sans fil. C'est la connexion Ethernet qui utilise des câbles."
+      },
+      {
+        type: "qcm",
+        q: "HTTP et HTTPS sont des protocoles réseau.",
+        opts: ["Vrai", "Faux"],
+        correct: 0,
+        feedback: "VRAI. HTTP (HyperText Transfer Protocol) et HTTPS (sa version sécurisée) sont des protocoles de la couche application utilisés pour le Web."
+      },
+      {
+        type: "qcm",
+        q: "Un seul câble réseau suffit pour connecter tous les appareils d'un collège.",
+        opts: ["Vrai", "Faux"],
+        correct: 1,
+        feedback: "FAUX. Un réseau de collège nécessite plusieurs équipements (switchs, routeurs, points d'accès Wi-Fi) et de nombreux câbles pour relier tous les appareils."
+      },
+      {
+        type: "qcm",
+        q: "Le numérique n'a aucun impact sur l'environnement car les données sont immatérielles.",
+        opts: ["Vrai", "Faux"],
+        correct: 1,
+        feedback: "FAUX. Même si les données semblent immatérielles, elles sont stockées et transmises par des équipements physiques (serveurs, câbles, antennes) qui consomment de l'énergie."
+      }
+    ]
+  },
+  {
+    id: "association",
+    label: "Associer",
+    questions: [
+      {
+        type: "match",
+        q: "Associe chaque équipement à sa fonction.",
+        pairs: [
+          { left: "Routeur", right: "Dirige les paquets entre réseaux" },
+          { left: "Switch", right: "Relie les appareils dans le réseau local" },
+          { left: "Box internet", right: "Relie le réseau local au FAI" },
+          { left: "Point d'accès Wi-Fi", right: "Diffuse le réseau sans fil" }
+        ],
+        feedback: "Le routeur dirige les paquets entre réseaux. Le switch relie les appareils en réseau local. La box relie au fournisseur d'accès Internet. Le point d'accès Wi-Fi diffuse le réseau sans fil."
+      },
+      {
+        type: "match",
+        q: "Associe chaque protocole à son usage.",
+        pairs: [
+          { left: "HTTP/HTTPS", right: "Navigation web" },
+          { left: "FTP", right: "Transfert de fichiers" },
+          { left: "SMTP", right: "Envoi d'emails" },
+          { left: "IP", right: "Adressage et routage des paquets" }
+        ],
+        feedback: "HTTP/HTTPS : Web. FTP : transfert de fichiers. SMTP : envoi d'emails. IP : adressage et routage."
+      },
+      {
+        type: "match",
+        q: "Associe chaque terme à sa définition.",
+        pairs: [
+          { left: "LAN", right: "Réseau local (Local Area Network)" },
+          { left: "Paquet", right: "Fragment de données transmis sur Internet" },
+          { left: "Protocole", right: "Ensemble de règles de communication" },
+          { left: "Adresse IP", right: "Identifiant numérique d'un appareil réseau" }
+        ],
+        feedback: "LAN = réseau local. Paquet = fragment de données. Protocole = règles de communication. Adresse IP = identifiant numérique d'un appareil."
+      }
+    ]
+  },
+  {
+    id: "completion",
+    label: "Compléter",
+    questions: [
+      {
+        type: "fill",
+        q: "Complète la phrase : Les données circulant sur Internet sont découpées en petits morceaux appelés ___.",
+        answer: "paquets",
+        alts: ["paquet", "packets"],
+        feedback: "Les données sont découpées en paquets qui transitent indépendamment sur le réseau puis sont réassemblés à destination."
+      },
+      {
+        type: "fill",
+        q: "Complète : L'équipement qui permet de relier plusieurs réseaux et de diriger les données s'appelle un ___.",
+        answer: "routeur",
+        alts: ["router"],
+        feedback: "Le routeur est l'équipement clé qui interconnecte des réseaux et dirige les paquets grâce à l'algorithme de routage."
+      },
+      {
+        type: "fill",
+        q: "Complète : Un ___ est un identifiant numérique unique attribué à chaque appareil sur un réseau.",
+        answer: "adresse ip",
+        alts: ["ip", "adresse IP", "IP"],
+        feedback: "L'adresse IP (Internet Protocol) permet d'identifier chaque appareil de façon unique sur un réseau, comme une adresse postale."
+      },
+      {
+        type: "fill",
+        q: "Complète : Le protocole ___ est utilisé pour naviguer sur le Web de façon sécurisée.",
+        answer: "https",
+        alts: ["HTTPS", "http", "HTTP"],
+        feedback: "HTTPS (HyperText Transfer Protocol Secure) est la version chiffrée de HTTP, utilisée pour sécuriser les échanges sur le Web."
+      },
+      {
+        type: "fill",
+        q: "Complète : Un réseau local limité à un bâtiment s'appelle un ___ (sigle en anglais).",
+        answer: "lan",
+        alts: ["LAN"],
+        feedback: "LAN signifie Local Area Network, soit réseau local en français."
+      },
+      {
+        type: "fill",
+        q: "Complète : L'ensemble des règles qui permettent aux appareils de communiquer sur un réseau s'appelle un ___.",
+        answer: "protocole",
+        alts: ["protocol"],
+        feedback: "Un protocole réseau est un ensemble standardisé de règles permettant à des appareils de communiquer entre eux."
+      }
+    ]
+  }
+];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function prepareModules() {
+  return rawModules.map(mod => ({
+    ...mod,
+    questions: mod.questions.map(q => {
+      if (q.type === 'qcm') {
+        const correctText = q.opts[q.correct];
+        const shuffled = shuffle(q.opts);
+        return { ...q, opts: shuffled, correct: shuffled.indexOf(correctText) };
+      }
+      return q;
+    })
+  }));
+}
+
+let modules = prepareModules();
+let currentModule = 0;
+let currentQ = 0;
+let answered = false;
+let correct = 0;
+let total = 0;
+let matchChecked = false;
+
+function maxScore() {
+  return modules[currentModule].questions.length;
+}
+
+function updateScore() {
+  const qs = modules[currentModule].questions;
+  document.getElementById('score-display').textContent = correct + ' / ' + maxScore();
+  document.getElementById('correct-display').textContent = correct;
+  document.getElementById('qnum-display').textContent = (currentQ + 1) + ' / ' + qs.length;
+  const pct = ((currentQ + (answered ? 1 : 0)) / qs.length) * 100;
+  document.getElementById('progress-fill').style.width = Math.round(pct) + '%';
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = modules.map((m, i) => `<button class="tab${i === currentModule ? ' active' : ''}" onclick="switchModule(${i})">${m.label}</button>`).join('');
+}
+
+function switchModule(i) {
+  currentModule = i;
+  currentQ = 0;
+  answered = false;
+  correct = 0;
+  total = 0;
+  matchChecked = false;
+  modules = prepareModules();
+  renderTabs();
+  renderQuestion();
+  updateScore();
+}
+
+function renderQuestion() {
+  const qs = modules[currentModule].questions;
+  if (currentQ >= qs.length) { renderResult(); return; }
+  const q = qs[currentQ];
+  const content = document.getElementById('content');
+  answered = false;
+  matchChecked = false;
+
+  if (q.type === 'qcm') {
+    content.innerHTML = `
+      <div class="question-card">
+        <div class="q-num">Question ${currentQ + 1} sur ${qs.length}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="options">
+          ${q.opts.map((o, i) => `<button class="option" id="opt-${i}" onclick="answerQCM(${i})">${o}</button>`).join('')}
+        </div>
+        <div id="feedback" style="display:none"></div>
+        <button class="nav-btn" id="next-btn" style="display:none" onclick="nextQuestion()">Question suivante →</button>
+      </div>
+    `;
+  } else if (q.type === 'fill') {
+    content.innerHTML = `
+      <div class="question-card">
+        <div class="q-num">Question ${currentQ + 1} sur ${qs.length}</div>
+        <div class="q-text">${q.q}</div>
+        <input type="text" class="fill-input" id="fill-ans" placeholder="Ta réponse ici..." />
+        <button class="submit-btn" onclick="answerFill()">Valider</button>
+        <div id="feedback" style="display:none"></div>
+        <button class="nav-btn" id="next-btn" style="display:none" onclick="nextQuestion()">Question suivante →</button>
+      </div>
+    `;
+    document.getElementById('fill-ans').addEventListener('keydown', e => { if (e.key === 'Enter') answerFill(); });
+  } else if (q.type === 'match') {
+    const rights = shuffle(q.pairs.map(p => p.right));
+    content.innerHTML = `
+      <div class="question-card">
+        <div class="q-num">Question ${currentQ + 1} sur ${qs.length}</div>
+        <div class="q-text">${q.q}</div>
+        ${q.pairs.map((p, i) => `
+          <div class="match-row">
+            <div class="match-left">${p.left}</div>
+            <select class="match-select" id="match-${i}">
+              <option value="">— choisir —</option>
+              ${rights.map(r => `<option value="${r}">${r}</option>`).join('')}
+            </select>
+          </div>
+        `).join('')}
+        <button class="submit-btn" style="margin-top:8px" onclick="answerMatch()">Valider</button>
+        <div id="feedback" style="display:none"></div>
+        <button class="nav-btn" id="next-btn" style="display:none" onclick="nextQuestion()">Question suivante →</button>
+      </div>
+    `;
+  }
+  updateScore();
+}
+
+function answerQCM(chosen) {
+  if (answered) return;
+  answered = true;
+  total++;
+  const q = modules[currentModule].questions[currentQ];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('disabled'));
+  if (chosen === q.correct) {
+    opts[chosen].classList.add('correct');
+    correct++;
+    showFeedback(true, q.feedback);
+  } else {
+    opts[chosen].classList.add('wrong');
+    opts[q.correct].classList.add('correct');
+    showFeedback(false, q.feedback);
+  }
+  document.getElementById('next-btn').style.display = 'block';
+  updateScore();
+}
+
+function answerFill() {
+  if (answered) return;
+  const inp = document.getElementById('fill-ans');
+  const val = inp.value.trim().toLowerCase();
+  const q = modules[currentModule].questions[currentQ];
+  answered = true;
+  total++;
+  const allValid = [q.answer.toLowerCase(), ...(q.alts || []).map(a => a.toLowerCase())];
+  if (allValid.includes(val)) {
+    inp.style.borderColor = 'var(--color-border-success)';
+    inp.style.background = 'var(--color-background-success)';
+    correct++;
+    showFeedback(true, q.feedback);
+  } else {
+    inp.style.borderColor = 'var(--color-border-danger)';
+    inp.style.background = 'var(--color-background-danger)';
+    showFeedback(false, 'Réponse attendue : <strong>' + q.answer + '</strong>. ' + q.feedback);
+  }
+  inp.disabled = true;
+  document.getElementById('next-btn').style.display = 'block';
+  updateScore();
+}
+
+function answerMatch() {
+  if (matchChecked) return;
+  matchChecked = true;
+  answered = true;
+  total++;
+  const q = modules[currentModule].questions[currentQ];
+  let allCorrect = true;
+  q.pairs.forEach((p, i) => {
+    const sel = document.getElementById('match-' + i);
+    sel.disabled = true;
+    if (sel.value === p.right) {
+      sel.classList.add('correct-sel');
+    } else {
+      sel.classList.add('wrong-sel');
+      allCorrect = false;
+    }
+  });
+  if (allCorrect) correct++;
+  showFeedback(allCorrect, q.feedback);
+  document.getElementById('next-btn').style.display = 'block';
+  updateScore();
+}
+
+function showFeedback(isCorrect, text) {
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  fb.className = 'feedback ' + (isCorrect ? 'correct' : 'wrong');
+  fb.innerHTML = (isCorrect ? '✓ ' : '✗ ') + text;
+}
+
+function nextQuestion() {
+  currentQ++;
+  renderQuestion();
+  updateScore();
+}
+
+function renderResult() {
+  const qs = modules[currentModule].questions;
+  const pct = qs.length > 0 ? Math.round((correct / qs.length) * 100) : 0;
+  let mention = '', mentionStyle = '';
+  if (pct >= 90) { mention = 'Excellent ! Tu maîtrises le sujet.'; mentionStyle = 'background:var(--color-background-success);color:var(--color-text-success)'; }
+  else if (pct >= 70) { mention = 'Bien ! Quelques points à revoir.'; mentionStyle = 'background:var(--color-background-info);color:var(--color-text-info)'; }
+  else if (pct >= 50) { mention = 'Pas mal, mais continue à réviser.'; mentionStyle = 'background:var(--color-background-warning);color:var(--color-text-warning)'; }
+  else { mention = 'Continue à réviser les notions de base.'; mentionStyle = 'background:var(--color-background-danger);color:var(--color-text-danger)'; }
+  document.getElementById('content').innerHTML = `
+    <div class="question-card result-screen">
+      <div class="result-score">${correct} / ${qs.length}</div>
+      <div class="result-label">bonnes réponses — ${pct}%</div>
+      <div class="result-mention" style="${mentionStyle}">${mention}</div>
+      <br>
+      <button class="nav-btn" onclick="restartModule()">Recommencer ce module</button>
+    </div>
+  `;
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('score-display').textContent = correct + ' / ' + qs.length;
+  document.getElementById('correct-display').textContent = correct;
+  document.getElementById('qnum-display').textContent = qs.length + ' / ' + qs.length;
+}
+
+function restartModule() {
+  currentQ = 0;
+  answered = false;
+  correct = 0;
+  total = 0;
+  matchChecked = false;
+  modules = prepareModules();
+  renderQuestion();
+  updateScore();
+}
+
+renderTabs();
+renderQuestion();
+updateScore();
+</script>
