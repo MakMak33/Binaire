@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exercices DNB Technologie – Programmer un robot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e1a;
+  --bg-card: #151829;
+  --bg-card-hover: #1c2038;
+  --bg-input: #1a1e35;
+  --border: #2a2f4a;
+  --text: #e2e8f0;
+  --text-dim: #8892b0;
+  --text-muted: #5a6380;
+  --accent: #6c63ff;
+  --accent-glow: rgba(108, 99, 255, 0.3);
+  --green: #10b981;
+  --green-bg: rgba(16, 185, 129, 0.12);
+  --green-border: rgba(16, 185, 129, 0.4);
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.12);
+  --red-border: rgba(239, 68, 68, 0.4);
+  --orange: #f59e0b;
+  --orange-bg: rgba(245, 158, 11, 0.12);
+  --blue: #3b82f6;
+  --teal: #14b8a6;
+  --pink: #ec4899;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ══ LAYOUT ══ */
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* ══ HEADER ══ */
+.app-header {
+  text-align: center;
+  padding: 2.5rem 1rem 2rem;
+  position: relative;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-header * { position: relative; z-index: 1; }
+
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #6c63ff, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.app-header .subtitle {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+  font-weight: 400;
+}
+
+/* ══ SCORE BAR ══ */
+.score-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.8rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.score-item .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.score-item.correct .val { color: var(--green); }
+.score-item.wrong .val { color: var(--red); }
+.score-item.total .val { color: var(--accent); }
+
+.progress-wrap {
+  flex: 1;
+  min-width: 150px;
+  max-width: 300px;
+  height: 8px;
+  background: var(--bg-input);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--teal));
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+
+/* ══ NAV TABS ══ */
+.nav-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 0.4rem;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.nav-tab {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.6rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.25s;
+  text-align: center;
+  position: relative;
+}
+
+.nav-tab:hover { color: var(--text); background: var(--bg-input); }
+
+.nav-tab.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+
+.nav-tab .tab-num {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.7;
+  margin-bottom: 1px;
+}
+
+.nav-tab .tab-check {
+  position: absolute;
+  top: 4px; right: 6px;
+  font-size: 0.6rem;
+  color: var(--green);
+}
+
+/* ══ SECTION ══ */
+.section { display: none; }
+.section.active { display: block; animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+
+.section-header .fiche-ref {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ══ EXERCISE CARD ══ */
+.exercise {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+  transition: border-color 0.3s;
+}
+
+.exercise.answered-correct {
+  border-color: var(--green-border);
+  background: var(--green-bg);
+}
+
+.exercise.answered-wrong {
+  border-color: var(--red-border);
+  background: var(--red-bg);
+}
+
+.exercise-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.exercise-question {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.exercise-question code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-input);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.88rem;
+  color: var(--teal);
+}
+
+/* ══ QCM OPTIONS ══ */
+.options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.option-btn:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.option-btn .opt-letter {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--border);
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.option-btn:hover:not(.disabled) .opt-letter {
+  background: var(--accent);
+  color: white;
+}
+
+.option-btn.correct {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.option-btn.correct .opt-letter {
+  background: var(--green);
+  color: white;
+}
+
+.option-btn.wrong {
+  border-color: var(--red);
+  background: var(--red-bg);
+}
+
+.option-btn.wrong .opt-letter {
+  background: var(--red);
+  color: white;
+}
+
+.option-btn.disabled { cursor: default; opacity: 0.7; }
+.option-btn.disabled.correct { opacity: 1; }
+
+/* ══ DRAG & DROP (ordering) ══ */
+.ordering-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 60px;
+}
+
+.drag-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 1rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  transition: all 0.2s;
+  font-size: 0.88rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.drag-item:active { cursor: grabbing; }
+
+.drag-item:hover {
+  border-color: var(--accent);
+}
+
+.drag-item .drag-handle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.drag-item .drag-num {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--border);
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.drag-item.correct-pos {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+
+.drag-item.correct-pos .drag-num {
+  background: var(--green);
+  color: white;
+}
+
+.drag-item.wrong-pos {
+  border-color: var(--red);
+  background: var(--red-bg);
+}
+
+/* ══ FILL-IN / TEXT INPUT ══ */
+.fill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.fill-input {
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.8rem;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fill-input:focus { border-color: var(--accent); }
+.fill-input.correct { border-color: var(--green); background: var(--green-bg); }
+.fill-input.wrong { border-color: var(--red); background: var(--red-bg); }
+
+/* ══ MATCHING ══ */
+.match-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.match-item {
+  padding: 0.7rem 1rem;
+  background: var(--bg-input);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.match-item:hover:not(.matched) {
+  border-color: var(--accent);
+}
+
+.match-item.selected {
+  border-color: var(--orange);
+  background: var(--orange-bg);
+}
+
+.match-item.matched {
+  border-color: var(--green);
+  background: var(--green-bg);
+  cursor: default;
+}
+
+/* ══ VALIDATE BTN ══ */
+.validate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.7rem 1.5rem;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+
+.validate-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.validate-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+/* ══ FEEDBACK ══ */
+.feedback {
+  margin-top: 0.8rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: none;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.feedback.show { display: block; }
+.feedback.correct { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); }
+.feedback.wrong { background: var(--red-bg); border: 1px solid var(--red-border); color: var(--red); }
+
+/* ══ CODE BLOCK ══ */
+.code-block {
+  background: #0d0f1a;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.2rem;
+  margin: 0.8rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: #c9d1d9;
+  overflow-x: auto;
+}
+
+.code-block .kw { color: #c084fc; font-weight: 700; }
+.code-block .str { color: #7dd3fc; }
+.code-block .cmt { color: #5a6380; font-style: italic; }
+.code-block .num { color: #fbbf24; }
+.code-block .fn { color: #34d399; }
+
+/* ══ RESET ══ */
+.reset-section {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.reset-btn {
+  padding: 0.6rem 1.5rem;
+  background: transparent;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ══ FOOTER ══ */
+.app-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+@media (max-width: 600px) {
+  .app-header h1 { font-size: 1.5rem; }
+  .score-bar { gap: 1rem; padding: 0.6rem 1rem; }
+  .nav-tab { min-width: 60px; font-size: 0.68rem; padding: 0.5rem 0.3rem; }
+  .match-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+<!-- ══ HEADER ══ -->
+<header class="app-header">
+  <h1>Exercices interactifs</h1>
+  <p class="subtitle">Scénario 4 — Programmer un robot pour répondre à un besoin</p>
+</header>
+
+<!-- ══ SCORE ══ -->
+<div class="score-bar">
+  <div class="score-item correct">✅ <span class="val" id="score-correct">0</span></div>
+  <div class="score-item wrong">❌ <span class="val" id="score-wrong">0</span></div>
+  <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="score-item total">📊 <span class="val" id="score-pct">0%</span></div>
+</div>
+
+<!-- ══ NAV ══ -->
+<nav class="nav-tabs" id="nav-tabs"></nav>
+
+<!-- ══ SECTIONS ══ -->
+<main id="sections-container"></main>
+
+<!-- ══ FOOTER ══ -->
+<footer class="app-footer">
+  Révision DNB Technologie — Programme Cycle 4 (BO 2020) — Académie de Bordeaux<br>
+  Sources : Fiches IP-2-2-C1, IP-2-3-C1 à C6 — Scénario 4
+</footer>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA: All exercises organized by section (fiche)
+// ══════════════════════════════════════════════════════
+
+const SECTIONS = [
+  {
+    id: 'algo',
+    num: 'Fiche 1',
+    title: 'Algorithme & Programme',
+    ref: 'Source : IP-2-3-C1',
+    color: '#6c63ff',
+    exercises: [
+      {
+        type: 'qcm',
+        question: "Qu'est-ce qu'un algorithme ?",
+        options: [
+          "Un logiciel de programmation par blocs",
+          "Une suite logique d'opérations pour résoudre un problème",
+          "Un langage de programmation comme Python",
+          "Un composant électronique du robot"
+        ],
+        correct: 1,
+        explanation: "Un algorithme est une suite finie d'opérations ou d'instructions aboutissant à la résolution d'un problème."
+      },
+      {
+        type: 'qcm',
+        question: "Dans quel ordre se déroulent les 3 étapes d'élaboration d'un programme ?",
+        options: [
+          "Langage machine → Logiciel par blocs → Langage naturel",
+          "Logiciel par blocs → Langage naturel → Langage machine",
+          "Langage naturel → Logiciel par blocs → Langage machine",
+          "Langage naturel → Langage machine → Logiciel par blocs"
+        ],
+        correct: 2,
+        explanation: "On écrit d'abord en langage naturel (sur papier), puis on construit avec un logiciel par blocs (Scratch), puis le logiciel traduit en langage machine binaire (0 et 1)."
+      },
+      {
+        type: 'qcm',
+        question: "Le microprocesseur du système programmable interprète quel type de langage ?",
+        options: [
+          "Le langage Python",
+          "Le langage naturel (français)",
+          "Le langage machine binaire (0 et 1)",
+          "Le langage Scratch"
+        ],
+        correct: 2,
+        explanation: "Après traduction, l'algorithme devient un langage machine binaire (0 ou 1) interprété par le microprocesseur."
+      },
+      {
+        type: 'fill',
+        question: "Complète : Un algorithme peut être traduit grâce à un langage de ________ en un programme binaire.",
+        answer: 'programmation',
+        explanation: "Un algorithme peut être traduit grâce à un langage de programmation (C, C++, Python...) en un programme binaire."
+      },
+      {
+        type: 'qcm',
+        question: "Quel logiciel permet de construire une représentation graphique de l'algorithme à l'étape 2 ?",
+        options: [
+          "Word",
+          "Scratch ou Blockly",
+          "Excel",
+          "Paint"
+        ],
+        correct: 1,
+        explanation: "On construit l'algorithme à l'aide d'un logiciel comme Scratch ou Blockly (programmation par blocs)."
+      }
+    ]
+  },
+  {
+    id: 'ecrire',
+    num: 'Fiche 2',
+    title: 'Écrire & tester un programme',
+    ref: 'Source : IP-2-2-C1',
+    color: '#14b8a6',
+    exercises: [
+      {
+        type: 'ordering',
+        question: "Remets dans l'ordre les 8 étapes de la programmation :",
+        items: [
+          "Vérifier le cahier des charges",
+          "Rédiger un algorithme",
+          "Repérer capteurs et actionneurs",
+          "Repérer les instructions du logiciel",
+          "Assembler les instructions",
+          "Exécuter le programme",
+          "Vérifier le comportement attendu",
+          "Adapter / corriger le programme"
+        ],
+        correctOrder: [0,1,2,3,4,5,6,7],
+        explanation: "Les 8 étapes dans l'ordre : cahier des charges → algorithme → capteurs/actionneurs → instructions → assemblage → exécution → vérification → correction."
+      },
+      {
+        type: 'qcm',
+        question: "Que faut-il faire si le comportement du robot ne correspond pas au comportement attendu ?",
+        options: [
+          "Recommencer tout depuis le début",
+          "Changer de robot",
+          "Corriger et adapter le programme",
+          "Ajouter plus de capteurs"
+        ],
+        correct: 2,
+        explanation: "Si le comportement ne correspond pas, il faut corriger le programme et l'adapter pour obtenir le comportement attendu (étapes 7 et 8)."
+      },
+      {
+        type: 'qcm',
+        question: "À quelle étape rédige-t-on l'algorithme ?",
+        options: [
+          "Étape 1",
+          "Étape 2",
+          "Étape 5",
+          "Étape 6"
+        ],
+        correct: 1,
+        explanation: "L'étape 2 consiste à rédiger un algorithme : des phrases qui permettent de respecter les fonctions de service demandées."
+      },
+      {
+        type: 'fill',
+        question: "Complète : Pour écrire un programme, on utilise un logiciel de programmation par ________.",
+        answer: 'blocs',
+        explanation: "Le concepteur crée des programmes à l'aide d'un logiciel de programmation par blocs pour commander le système réel."
+      }
+    ]
+  },
+  {
+    id: 'sequences',
+    num: 'Fiche 3',
+    title: 'Séquences & Boucles',
+    ref: 'Source : IP-2-3-C3',
+    color: '#8b5cf6',
+    exercises: [
+      {
+        type: 'qcm',
+        question: "Quelle est la différence entre une séquence et une boucle ?",
+        options: [
+          "Une séquence utilise des capteurs, une boucle non",
+          "Une séquence s'exécute une seule fois, une boucle répète les instructions",
+          "Une séquence est plus rapide qu'une boucle",
+          "Il n'y a pas de différence"
+        ],
+        correct: 1,
+        explanation: "Une séquence enchaîne les ordres une seule fois, tandis qu'une boucle répète les instructions un certain nombre de fois ou indéfiniment."
+      },
+      {
+        type: 'qcm',
+        question: 'Pour tracer un carré avec un robot, on utilise : "Répéter 4 fois : avancer + tourner 90°". C\'est :',
+        options: [
+          "Une séquence simple",
+          "Une boucle définie",
+          "Une boucle infinie",
+          "Une instruction conditionnelle"
+        ],
+        correct: 1,
+        explanation: "C'est une boucle définie car les instructions sont répétées un nombre précis de fois (4 fois)."
+      },
+      {
+        type: 'qcm',
+        question: '"Répéter indéfiniment : avancer" est :',
+        options: [
+          "Une séquence",
+          "Une boucle définie",
+          "Une boucle infinie",
+          "Une condition"
+        ],
+        correct: 2,
+        explanation: "\"Répéter indéfiniment\" est une boucle infinie : les instructions sont répétées sans fin."
+      },
+      {
+        type: 'qcm',
+        question: "Un programme fait : avancer 3 secondes, tourner à droite, avancer 2 secondes, stop. C'est :",
+        options: [
+          "Une boucle",
+          "Une séquence",
+          "Une condition",
+          "Un capteur"
+        ],
+        correct: 1,
+        explanation: "Les ordres s'enchaînent les uns après les autres, une seule fois, sans répétition : c'est une séquence."
+      }
+    ]
+  },
+  {
+    id: 'conditions',
+    num: 'Fiche 4',
+    title: 'Instructions conditionnelles',
+    ref: 'Source : IP-2-3-C3',
+    color: '#f59e0b',
+    exercises: [
+      {
+        type: 'qcm',
+        question: 'Que signifie l\'instruction "SI distance < 10 cm ALORS arrêt SINON avancer" ?',
+        options: [
+          "Le robot s'arrête toujours",
+          "Le robot avance toujours",
+          "Le robot s'arrête si un obstacle est à moins de 10 cm, sinon il avance",
+          "Le robot tourne à gauche"
+        ],
+        correct: 2,
+        explanation: "C'est une instruction conditionnelle : SI la condition est vraie (obstacle à moins de 10 cm), le robot s'arrête. SINON, il avance."
+      },
+      {
+        type: 'qcm',
+        question: '"Quand la touche espace est pressée" est un exemple de :',
+        options: [
+          "Boucle infinie",
+          "Variable dynamique",
+          "Événement initial",
+          "Événement conditionnel"
+        ],
+        correct: 2,
+        explanation: "C'est un événement initial (\"Quand événement\") qui permet de lancer le programme."
+      },
+      {
+        type: 'matching',
+        question: "Associe chaque type d'événement à son exemple :",
+        left: ["Événement initial", "Événement conditionnel", "Grandeur physique", "Déplacement d'objet"],
+        right: ["Mesure capteur ultrasons", "Changement de luminosité", "Quand touche pressée", "SI obstacle ALORS arrêt"],
+        correctPairs: [[0,2],[1,3],[2,1],[3,0]],
+        explanation: "L'événement initial lance le programme (touche pressée). L'événement conditionnel teste une condition (SI…ALORS). La grandeur physique est un changement détecté (luminosité). Le déplacement est mesuré par un capteur (ultrasons)."
+      },
+      {
+        type: 'fill',
+        question: "Complète l'instruction conditionnelle : ________ obstacle ALORS arrêt SINON avancer.",
+        answer: 'si',
+        explanation: "L'instruction conditionnelle s'écrit : SI [condition] ALORS [action] SINON [autre action]."
+      },
+      {
+        type: 'qcm',
+        question: "Parmi ces événements, lequel est détectable par un capteur ?",
+        options: [
+          "Le nom du robot",
+          "La variation de luminosité",
+          "La couleur du programme",
+          "Le nom du programmeur"
+        ],
+        correct: 1,
+        explanation: "La variation d'une grandeur physique (luminosité, chaleur, couleur…) est un événement détectable par un capteur."
+      }
+    ]
+  },
+  {
+    id: 'variables',
+    num: 'Fiche 5',
+    title: 'Variables informatiques',
+    ref: 'Source : IP-2-3-C2',
+    color: '#3b82f6',
+    exercises: [
+      {
+        type: 'qcm',
+        question: "Qu'est-ce qu'une variable informatique ?",
+        options: [
+          "Un type de capteur",
+          "Un élément qui associe un nom à une valeur stockée en mémoire",
+          "Un logiciel de programmation",
+          "Un type d'actionneur"
+        ],
+        correct: 1,
+        explanation: "Les variables sont des éléments qui associent un nom (identifiant) à une valeur qui sera implantée dans la mémoire du système programmé."
+      },
+      {
+        type: 'qcm',
+        question: 'La variable "vitesse = 100" est une variable :',
+        options: [
+          "Dynamique",
+          "Statique",
+          "Conditionnelle",
+          "Séquentielle"
+        ],
+        correct: 1,
+        explanation: "Les variables statiques sont des valeurs constantes définies par le programmeur. Ici, la vitesse est fixée à 100."
+      },
+      {
+        type: 'qcm',
+        question: 'La variable "obstacle = distance mesurée par le capteur ultrasons" est :',
+        options: [
+          "Statique",
+          "Dynamique",
+          "Constante",
+          "Initiale"
+        ],
+        correct: 1,
+        explanation: "Les variables affectées à des capteurs sont dynamiques car leurs valeurs changent dans le temps en fonction de la mesure du capteur."
+      },
+      {
+        type: 'matching',
+        question: "Associe chaque variable à son type :",
+        left: ["vitesse = 100", "obstacle = capteur ultrasons", "intersection = compteur", "température = capteur temp."],
+        right: ["Dynamique (capteur)", "Statique (constante)", "Dynamique (comptage)", "Dynamique (capteur)"],
+        correctPairs: [[0,1],[1,0],[2,2],[3,3]],
+        explanation: "vitesse=100 est statique (valeur constante). obstacle et température sont dynamiques (liées à des capteurs). intersection est dynamique (comptage incrémenté)."
+      },
+      {
+        type: 'fill',
+        question: "Complète : Une variable ________ change de valeur en fonction de la mesure du capteur.",
+        answer: 'dynamique',
+        explanation: "Les variables dynamiques sont affectées à des capteurs et leurs valeurs changent dans le temps."
+      }
+    ]
+  },
+  {
+    id: 'capteurs',
+    num: 'Fiche 6',
+    title: 'Capteur, Actionneur, Interface',
+    ref: 'Source : IP-2-3-C6',
+    color: '#10b981',
+    exercises: [
+      {
+        type: 'matching',
+        question: "Associe chaque composant à son rôle :",
+        left: ["Capteur", "Actionneur", "Interface programmable"],
+        right: ["Traite les informations et envoie les ordres", "Détecte une grandeur physique", "Réalise une action (moteur, LED…)"],
+        correctPairs: [[0,1],[1,2],[2,0]],
+        explanation: "Le capteur détecte (entrée), l'interface traite (programme), l'actionneur agit (sortie). C'est la chaîne d'information."
+      },
+      {
+        type: 'qcm',
+        question: "Dans la chaîne d'information, quel est l'ordre correct ?",
+        options: [
+          "Actionneur → Interface → Capteur",
+          "Interface → Capteur → Actionneur",
+          "Capteur → Interface → Actionneur",
+          "Capteur → Actionneur → Interface"
+        ],
+        correct: 2,
+        explanation: "La chaîne d'information : Capteur (acquérir) → Interface/Programme (traiter) → Actionneur (agir)."
+      },
+      {
+        type: 'qcm',
+        question: "Parmi ces éléments, lequel est un actionneur ?",
+        options: [
+          "Capteur à ultrasons",
+          "Capteur de luminosité",
+          "Moteur",
+          "Capteur de température"
+        ],
+        correct: 2,
+        explanation: "Le moteur est un actionneur : il convertit l'énergie reçue pour réaliser une action (faire avancer le robot)."
+      },
+      {
+        type: 'qcm',
+        question: "Le capteur à ultrasons du robot mBot mesure :",
+        options: [
+          "La température",
+          "La luminosité",
+          "La distance entre le robot et un obstacle",
+          "La vitesse du robot"
+        ],
+        correct: 2,
+        explanation: "Le capteur à ultrasons mesure la distance entre le robot et un obstacle en envoyant des ondes sonores."
+      },
+      {
+        type: 'fill',
+        question: "Complète la chaîne d'information : Capteur → ________ → Actionneur",
+        answer: 'interface',
+        explanation: "L'interface (avec son programme) traite les informations des capteurs et commande les actionneurs."
+      }
+    ]
+  },
+  {
+    id: 'embarque',
+    num: 'Fiche 7',
+    title: 'Systèmes embarqués',
+    ref: 'Source : IP-2-3-C4',
+    color: '#ef4444',
+    exercises: [
+      {
+        type: 'qcm',
+        question: "Qu'est-ce qu'un système embarqué ?",
+        options: [
+          "Un logiciel de programmation en ligne",
+          "Un système électronique et informatique autonome capable de réagir en temps réel",
+          "Un capteur de température",
+          "Un réseau informatique"
+        ],
+        correct: 1,
+        explanation: "Un système embarqué est un système électronique et informatique autonome, capable de réagir en temps réel et de réaliser des tâches précises."
+      },
+      {
+        type: 'qcm',
+        question: "Un portail automatique qui s'ouvre et se ferme selon un programme prédéfini est un exemple de :",
+        options: [
+          "Intelligence artificielle forte",
+          "Intelligence artificielle faible",
+          "Variable dynamique",
+          "Boucle infinie"
+        ],
+        correct: 1,
+        explanation: "L'IA faible exécute des tâches prédéfinies à l'avance, comme un portail automatique."
+      },
+      {
+        type: 'qcm',
+        question: "Un robot aspirateur qui apprend la disposition de la maison est un exemple de :",
+        options: [
+          "IA faible",
+          "IA forte",
+          "Variable statique",
+          "Séquence simple"
+        ],
+        correct: 1,
+        explanation: "L'IA forte permet à l'objet d'apprendre et de modifier son programme interne, comme un robot aspirateur."
+      },
+      {
+        type: 'fill',
+        question: "Complète : Le programme du système embarqué est stocké dans la ________ d'un ordinateur embarqué.",
+        answer: 'mémoire',
+        explanation: "Le système embarqué se compose d'un programme stocké dans la mémoire d'un ordinateur embarqué."
+      }
+    ]
+  },
+  {
+    id: 'signal',
+    num: 'Fiche 8',
+    title: 'Forme & transmission du signal',
+    ref: 'Source : IP-2-3-C5',
+    color: '#f59e0b',
+    exercises: [
+      {
+        type: 'qcm',
+        question: "Quelles sont les 4 formes de signal ?",
+        options: [
+          "Bluetooth, WiFi, 4G, 5G",
+          "Électrique, lumineux, sonore, radio",
+          "Capteur, actionneur, interface, programme",
+          "Cuivre, fibre, USB, câble réseau"
+        ],
+        correct: 1,
+        explanation: "Un signal peut prendre 4 formes : signal électrique, signal lumineux, signal sonore ou signal radio."
+      },
+      {
+        type: 'matching',
+        question: "Associe chaque moyen de transmission à sa catégorie :",
+        left: ["Fibre optique", "Bluetooth", "Câble USB", "Ondes infrarouges"],
+        right: ["Sans fil", "Par fil", "Sans fil", "Par fil"],
+        correctPairs: [[0,1],[1,0],[2,3],[3,2]],
+        explanation: "Par fil : fibre optique et câble USB. Sans fil : Bluetooth et ondes infrarouges."
+      },
+      {
+        type: 'qcm',
+        question: "Entre une clé WiFi et une carte WiFi, le signal est transmis par :",
+        options: [
+          "Fil de cuivre",
+          "Câble USB",
+          "Ondes électromagnétiques (sans fil)",
+          "Fibre optique"
+        ],
+        correct: 2,
+        explanation: "Entre une clé WiFi et une carte WiFi : forme du signal = radio, transmission = par ondes électromagnétiques (sans fil)."
+      },
+      {
+        type: 'qcm',
+        question: "Dans un câble USB, la forme du signal est :",
+        options: [
+          "Signal radio",
+          "Signal lumineux",
+          "Signal sonore",
+          "Signal électrique"
+        ],
+        correct: 3,
+        explanation: "Dans un câble USB, le signal prend la forme d'impulsions électriques : c'est un signal électrique transmis par câble."
+      },
+      {
+        type: 'fill',
+        question: "Complète : Pour identifier un signal, on repère l'________, le récepteur et les composants utilisés.",
+        answer: 'émetteur',
+        explanation: "Pour reconnaître la forme et la transmission du signal, on repère l'émetteur, le récepteur et les composants utilisés."
+      }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+
+let totalExercises = 0;
+let answeredExercises = 0;
+let correctCount = 0;
+let wrongCount = 0;
+const sectionCompletion = {};
+
+SECTIONS.forEach(s => {
+  totalExercises += s.exercises.length;
+  sectionCompletion[s.id] = { total: s.exercises.length, done: 0 };
+});
+
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+
+function buildNav() {
+  const nav = document.getElementById('nav-tabs');
+  SECTIONS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab' + (i === 0 ? ' active' : '');
+    btn.dataset.section = s.id;
+    btn.innerHTML = `<span class="tab-num">${s.num}</span>${s.title}<span class="tab-check" id="check-${s.id}" style="display:none">✓</span>`;
+    btn.style.setProperty('--tab-color', s.color);
+    btn.onclick = () => switchSection(s.id);
+    nav.appendChild(btn);
+  });
+}
+
+function buildSections() {
+  const container = document.getElementById('sections-container');
+  SECTIONS.forEach((s, si) => {
+    const sec = document.createElement('section');
+    sec.className = 'section' + (si === 0 ? ' active' : '');
+    sec.id = `section-${s.id}`;
+
+    let html = `<div class="section-header">
+      <h2 style="color:${s.color}">${s.title}</h2>
+      <div class="fiche-ref">${s.ref}</div>
+    </div>`;
+
+    s.exercises.forEach((ex, ei) => {
+      const eid = `${s.id}-${ei}`;
+      html += `<div class="exercise" id="ex-${eid}">`;
+      html += `<div class="exercise-num">Exercice ${ei + 1}</div>`;
+      html += `<div class="exercise-question">${ex.question}</div>`;
+
+      if (ex.type === 'qcm') {
+        html += buildQCM(ex, eid);
+      } else if (ex.type === 'fill') {
+        html += buildFill(ex, eid);
+      } else if (ex.type === 'ordering') {
+        html += buildOrdering(ex, eid);
+      } else if (ex.type === 'matching') {
+        html += buildMatching(ex, eid);
+      }
+
+      html += `<div class="feedback" id="fb-${eid}"></div>`;
+      html += `</div>`;
+    });
+
+    html += `<div class="reset-section">
+      <button class="reset-btn" onclick="resetSection('${s.id}')">🔄 Recommencer cette fiche</button>
+    </div>`;
+
+    sec.innerHTML = html;
+    container.appendChild(sec);
+  });
+}
+
+function buildQCM(ex, eid) {
+  const letters = ['A', 'B', 'C', 'D'];
+  let html = '<div class="options">';
+  ex.options.forEach((opt, i) => {
+    html += `<button class="option-btn" id="opt-${eid}-${i}" onclick="answerQCM('${eid}', ${i}, ${ex.correct})">
+      <span class="opt-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </button>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function buildFill(ex, eid) {
+  return `<div class="fill-group">
+    <input type="text" class="fill-input" id="input-${eid}" placeholder="Ta réponse…"
+      onkeydown="if(event.key==='Enter') answerFill('${eid}', '${ex.answer}')">
+    <button class="validate-btn" onclick="answerFill('${eid}', '${ex.answer}')">Valider</button>
+  </div>`;
+}
+
+function buildOrdering(ex, eid) {
+  // Shuffle items
+  const indices = ex.items.map((_, i) => i);
+  shuffleArray(indices);
+  let html = `<div class="ordering-zone" id="order-${eid}">`;
+  indices.forEach((origIdx, pos) => {
+    html += `<div class="drag-item" draggable="true" data-orig="${origIdx}" id="drag-${eid}-${pos}"
+      ondragstart="dragStart(event)" ondragover="dragOver(event)" ondrop="drop(event, '${eid}')">
+      <span class="drag-handle">⠿</span>
+      <span class="drag-num">${pos + 1}</span>
+      <span>${ex.items[origIdx]}</span>
+    </div>`;
+  });
+  html += '</div>';
+  html += `<button class="validate-btn" onclick="answerOrdering('${eid}')">Valider l'ordre</button>`;
+  return html;
+}
+
+function buildMatching(ex, eid) {
+  const rightShuffled = ex.right.map((_, i) => i);
+  shuffleArray(rightShuffled);
+  let html = `<div class="match-grid" id="match-${eid}">`;
+  ex.left.forEach((item, i) => {
+    html += `<div class="match-item match-left" data-idx="${i}" data-side="left"
+      id="ml-${eid}-${i}" onclick="matchClick('${eid}', 'left', ${i})">${item}</div>`;
+  });
+  rightShuffled.forEach((origIdx) => {
+    html += `<div class="match-item match-right" data-idx="${origIdx}" data-side="right"
+      id="mr-${eid}-${origIdx}" onclick="matchClick('${eid}', 'right', ${origIdx})">${ex.right[origIdx]}</div>`;
+  });
+  html += '</div>';
+  html += `<button class="validate-btn" id="matchbtn-${eid}" onclick="answerMatching('${eid}')" disabled>Valider les associations</button>`;
+  return html;
+}
+
+// ══════════════════════════════════════════════════════
+// INTERACTION HANDLERS
+// ══════════════════════════════════════════════════════
+
+function answerQCM(eid, chosen, correct) {
+  const exEl = document.getElementById(`ex-${eid}`);
+  if (exEl.classList.contains('answered-correct') || exEl.classList.contains('answered-wrong')) return;
+
+  const section = eid.split('-')[0];
+  const exIdx = parseInt(eid.split('-')[1]);
+  const ex = SECTIONS.find(s => s.id === section).exercises[exIdx];
+
+  // Disable all options
+  ex.options.forEach((_, i) => {
+    const btn = document.getElementById(`opt-${eid}-${i}`);
+    btn.classList.add('disabled');
+  });
+
+  const chosenBtn = document.getElementById(`opt-${eid}-${chosen}`);
+  const correctBtn = document.getElementById(`opt-${eid}-${correct}`);
+
+  if (chosen === correct) {
+    chosenBtn.classList.add('correct');
+    exEl.classList.add('answered-correct');
+    showFeedback(eid, true, ex.explanation);
+    correctCount++;
+  } else {
+    chosenBtn.classList.add('wrong');
+    correctBtn.classList.add('correct');
+    exEl.classList.add('answered-wrong');
+    showFeedback(eid, false, ex.explanation);
+    wrongCount++;
+  }
+
+  answeredExercises++;
+  updateScore(section);
+}
+
+function answerFill(eid, answer) {
+  const exEl = document.getElementById(`ex-${eid}`);
+  if (exEl.classList.contains('answered-correct') || exEl.classList.contains('answered-wrong')) return;
+
+  const input = document.getElementById(`input-${eid}`);
+  const val = input.value.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const expected = answer.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const section = eid.split('-')[0];
+  const exIdx = parseInt(eid.split('-')[1]);
+  const ex = SECTIONS.find(s => s.id === section).exercises[exIdx];
+
+  if (val === expected) {
+    input.classList.add('correct');
+    exEl.classList.add('answered-correct');
+    showFeedback(eid, true, ex.explanation);
+    correctCount++;
+  } else {
+    input.classList.add('wrong');
+    exEl.classList.add('answered-wrong');
+    showFeedback(eid, false, `La bonne réponse était : <b>${answer}</b>. ${ex.explanation}`);
+    wrongCount++;
+  }
+
+  input.disabled = true;
+  answeredExercises++;
+  updateScore(section);
+}
+
+// Drag & Drop
+let draggedEl = null;
+
+function dragStart(e) {
+  draggedEl = e.target.closest('.drag-item');
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => draggedEl.style.opacity = '0.4', 0);
+}
+
+function dragOver(e) { e.preventDefault(); }
+
+function drop(e, eid) {
+  e.preventDefault();
+  const target = e.target.closest('.drag-item');
+  if (!target || target === draggedEl) { draggedEl.style.opacity = '1'; return; }
+  const zone = document.getElementById(`order-${eid}`);
+  const items = [...zone.children];
+  const fromIdx = items.indexOf(draggedEl);
+  const toIdx = items.indexOf(target);
+  if (fromIdx < toIdx) {
+    zone.insertBefore(draggedEl, target.nextSibling);
+  } else {
+    zone.insertBefore(draggedEl, target);
+  }
+  draggedEl.style.opacity = '1';
+  // Update numbers
+  [...zone.children].forEach((el, i) => {
+    el.querySelector('.drag-num').textContent = i + 1;
+  });
+}
+
+function answerOrdering(eid) {
+  const exEl = document.getElementById(`ex-${eid}`);
+  if (exEl.classList.contains('answered-correct') || exEl.classList.contains('answered-wrong')) return;
+
+  const zone = document.getElementById(`order-${eid}`);
+  const items = [...zone.children];
+  const section = eid.split('-')[0];
+  const exIdx = parseInt(eid.split('-')[1]);
+  const ex = SECTIONS.find(s => s.id === section).exercises[exIdx];
+
+  let allCorrect = true;
+  items.forEach((el, i) => {
+    const orig = parseInt(el.dataset.orig);
+    if (orig === ex.correctOrder[i]) {
+      el.classList.add('correct-pos');
+    } else {
+      el.classList.add('wrong-pos');
+      allCorrect = false;
+    }
+    el.draggable = false;
+    el.style.cursor = 'default';
+  });
+
+  if (allCorrect) {
+    exEl.classList.add('answered-correct');
+    showFeedback(eid, true, ex.explanation);
+    correctCount++;
+  } else {
+    exEl.classList.add('answered-wrong');
+    showFeedback(eid, false, ex.explanation);
+    wrongCount++;
+  }
+
+  answeredExercises++;
+  updateScore(section);
+}
+
+// Matching
+const matchState = {};
+
+function matchClick(eid, side, idx) {
+  if (!matchState[eid]) matchState[eid] = { left: null, right: null, pairs: [], total: 0 };
+  const state = matchState[eid];
+
+  const el = document.getElementById(`m${side[0]}-${eid}-${idx}`);
+  if (el.classList.contains('matched')) return;
+
+  // Deselect same side
+  if (state[side] !== null) {
+    document.getElementById(`m${side[0]}-${eid}-${state[side]}`).classList.remove('selected');
+  }
+
+  state[side] = idx;
+  el.classList.add('selected');
+
+  // If both selected, make a pair
+  if (state.left !== null && state.right !== null) {
+    state.pairs.push([state.left, state.right]);
+    document.getElementById(`ml-${eid}-${state.left}`).classList.remove('selected');
+    document.getElementById(`ml-${eid}-${state.left}`).classList.add('matched');
+    document.getElementById(`mr-${eid}-${state.right}`).classList.remove('selected');
+    document.getElementById(`mr-${eid}-${state.right}`).classList.add('matched');
+    state.total++;
+
+    const section = eid.split('-')[0];
+    const exIdx = parseInt(eid.split('-')[1]);
+    const ex = SECTIONS.find(s => s.id === section).exercises[exIdx];
+
+    if (state.total >= ex.left.length) {
+      document.getElementById(`matchbtn-${eid}`).disabled = false;
+    }
+
+    state.left = null;
+    state.right = null;
+  }
+}
+
+function answerMatching(eid) {
+  const exEl = document.getElementById(`ex-${eid}`);
+  if (exEl.classList.contains('answered-correct') || exEl.classList.contains('answered-wrong')) return;
+
+  const state = matchState[eid];
+  const section = eid.split('-')[0];
+  const exIdx = parseInt(eid.split('-')[1]);
+  const ex = SECTIONS.find(s => s.id === section).exercises[exIdx];
+
+  let allCorrect = true;
+  state.pairs.forEach(([l, r]) => {
+    const correctR = ex.correctPairs.find(p => p[0] === l);
+    if (!correctR || correctR[1] !== r) allCorrect = false;
+  });
+
+  if (allCorrect) {
+    exEl.classList.add('answered-correct');
+    showFeedback(eid, true, ex.explanation);
+    correctCount++;
+  } else {
+    exEl.classList.add('answered-wrong');
+    showFeedback(eid, false, ex.explanation);
+    wrongCount++;
+  }
+
+  answeredExercises++;
+  updateScore(section);
+}
+
+// ══════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════
+
+function showFeedback(eid, isCorrect, text) {
+  const fb = document.getElementById(`fb-${eid}`);
+  fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  fb.innerHTML = (isCorrect ? '✅ Correct ! ' : '❌ Incorrect. ') + text;
+}
+
+function updateScore(sectionId) {
+  document.getElementById('score-correct').textContent = correctCount;
+  document.getElementById('score-wrong').textContent = wrongCount;
+  const pct = totalExercises > 0 ? Math.round((answeredExercises / totalExercises) * 100) : 0;
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Section completion check
+  sectionCompletion[sectionId].done++;
+  if (sectionCompletion[sectionId].done >= sectionCompletion[sectionId].total) {
+    const check = document.getElementById(`check-${sectionId}`);
+    if (check) check.style.display = 'inline';
+  }
+}
+
+function switchSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`section-${id}`).classList.add('active');
+  document.querySelector(`[data-section="${id}"]`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetSection(sectionId) {
+  const sec = SECTIONS.find(s => s.id === sectionId);
+  const sectionEl = document.getElementById(`section-${sectionId}`);
+
+  // Recalculate scores
+  sectionEl.querySelectorAll('.exercise').forEach(exEl => {
+    if (exEl.classList.contains('answered-correct')) {
+      correctCount--;
+      answeredExercises--;
+    } else if (exEl.classList.contains('answered-wrong')) {
+      wrongCount--;
+      answeredExercises--;
+    }
+  });
+
+  sectionCompletion[sectionId].done = 0;
+  const check = document.getElementById(`check-${sectionId}`);
+  if (check) check.style.display = 'none';
+
+  // Clear matching state
+  sec.exercises.forEach((ex, ei) => {
+    const eid = `${sectionId}-${ei}`;
+    if (matchState[eid]) delete matchState[eid];
+  });
+
+  // Rebuild section
+  const container = document.getElementById('sections-container');
+  const newSec = document.createElement('section');
+  newSec.className = 'section active';
+  newSec.id = `section-${sectionId}`;
+
+  let html = `<div class="section-header">
+    <h2 style="color:${sec.color}">${sec.title}</h2>
+    <div class="fiche-ref">${sec.ref}</div>
+  </div>`;
+
+  sec.exercises.forEach((ex, ei) => {
+    const eid = `${sectionId}-${ei}`;
+    html += `<div class="exercise" id="ex-${eid}">`;
+    html += `<div class="exercise-num">Exercice ${ei + 1}</div>`;
+    html += `<div class="exercise-question">${ex.question}</div>`;
+    if (ex.type === 'qcm') html += buildQCM(ex, eid);
+    else if (ex.type === 'fill') html += buildFill(ex, eid);
+    else if (ex.type === 'ordering') html += buildOrdering(ex, eid);
+    else if (ex.type === 'matching') html += buildMatching(ex, eid);
+    html += `<div class="feedback" id="fb-${eid}"></div></div>`;
+  });
+
+  html += `<div class="reset-section">
+    <button class="reset-btn" onclick="resetSection('${sectionId}')">🔄 Recommencer cette fiche</button>
+  </div>`;
+
+  newSec.innerHTML = html;
+  sectionEl.replaceWith(newSec);
+
+  updateScoreDisplay();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateScoreDisplay() {
+  document.getElementById('score-correct').textContent = correctCount;
+  document.getElementById('score-wrong').textContent = wrongCount;
+  const pct = totalExercises > 0 ? Math.round((answeredExercises / totalExercises) * 100) : 0;
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+
+buildNav();
+buildSections();
+</script>
+
+</body>
+</html>
