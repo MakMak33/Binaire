@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DNB Technologie – La Maison Domotique</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--card:#121c32;--cardAlt:#182444;
+  --info:#42a5f5;--infoDk:#1565c0;--energy:#66bb6a;--energyDk:#2e7d32;
+  --orange:#ffa726;--purple:#ab47bc;--red:#ef5350;--cyan:#26c6da;
+  --text:#e0e4f0;--muted:#6d7f9a;--border:#1c2a4c;
+  --success:#43a047;--error:#e53935;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+a{color:var(--info);text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input{font-family:inherit;outline:none}
+
+/* ── Layout ── */
+.app-header{text-align:center;padding:28px 20px 16px;border-bottom:1px solid var(--border);background:rgba(18,28,50,.7);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.app-header .badge{display:inline-block;background:linear-gradient(135deg,var(--info),var(--purple));color:#fff;font-size:10px;font-weight:700;padding:4px 14px;border-radius:20px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.app-header h1{font-size:clamp(22px,5vw,34px);font-weight:800;background:linear-gradient(135deg,var(--orange),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+.app-header p{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Tabs */
+.main-tabs{display:flex;gap:6px;padding:14px 16px;justify-content:center;flex-wrap:wrap;border-bottom:1px solid var(--border);background:rgba(18,28,50,.4)}
+.main-tab{padding:9px 18px;border-radius:22px;font-size:13px;font-weight:600;transition:all .25s;border:1px solid var(--border);background:transparent;color:var(--muted)}
+.main-tab.active{border:none;background:linear-gradient(135deg,var(--info),var(--purple));color:#fff;font-weight:700;box-shadow:0 2px 12px rgba(66,165,245,.25)}
+.main-tab:hover:not(.active){background:rgba(66,165,245,.08);color:var(--text)}
+
+.sub-tabs{display:flex;gap:6px;padding:12px 0;flex-wrap:wrap}
+.sub-tab{padding:7px 15px;border-radius:18px;font-size:12px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .25s}
+.sub-tab.active{border:none;background:linear-gradient(135deg,var(--info),var(--purple));color:#fff}
+
+.content{max-width:880px;margin:0 auto;padding:20px}
+
+/* Cards */
+.card{background:var(--card);border-radius:16px;padding:22px;margin-bottom:14px;border:1px solid var(--border);transition:border-color .3s}
+.card-title{font-size:17px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.card-title .icon{font-size:22px}
+
+/* Chain boxes */
+.chain-box{border-radius:12px;padding:18px;margin-bottom:14px}
+.chain-box.info{background:rgba(66,165,245,.07);border:1px solid rgba(66,165,245,.25)}
+.chain-box.energy{background:rgba(102,187,106,.07);border:1px solid rgba(102,187,106,.25)}
+
+/* Steps row */
+.steps-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.step-badge{font-weight:700;font-size:13px;padding:6px 14px;border-radius:8px;color:#fff;text-align:center;min-width:90px;flex-shrink:0}
+.step-badge.info{background:var(--info)}
+.step-badge.energy{background:var(--energy)}
+.arrow{font-size:20px;color:var(--muted)}
+
+/* Example box */
+.example{background:rgba(255,255,255,.04);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);margin-top:8px;border-left:3px solid var(--orange)}
+.example.green{border-left-color:var(--energy)}
+
+/* Tip */
+.tip{background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.25);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--orange);margin-top:12px}
+.tip.purple{background:rgba(171,71,188,.08);border-color:rgba(171,71,188,.25);color:var(--purple)}
+.tip.cyan{background:rgba(38,198,218,.08);border-color:rgba(38,198,218,.25);color:var(--cyan)}
+.tip.green{background:rgba(102,187,106,.08);border-color:rgba(102,187,106,.25);color:var(--energy)}
+
+/* Grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+
+/* Flashcard / Vocab */
+.flash{cursor:pointer;transition:all .25s;padding:13px 18px;margin-bottom:8px}
+.flash:hover{border-color:var(--orange)}
+.flash .term{font-weight:700;color:var(--orange);font-size:15px}
+.flash .arrow-icon{font-size:16px;color:var(--muted);transition:transform .3s}
+.flash .arrow-icon.open{transform:rotate(180deg)}
+.flash .def{font-size:14px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.6}
+
+/* Quiz */
+.quiz-option{display:block;width:100%;padding:13px 18px;margin-bottom:8px;border-radius:12px;border:1px solid var(--border);background:rgba(18,28,50,.5);color:var(--text);font-size:14px;text-align:left;transition:all .2s}
+.quiz-option:hover:not(.answered){background:rgba(66,165,245,.06);border-color:var(--info)}
+.quiz-option.correct{border:2px solid var(--success);background:rgba(67,160,71,.12)}
+.quiz-option.wrong{border:2px solid var(--error);background:rgba(239,57,53,.12)}
+.quiz-option .letter{font-weight:700;margin-right:10px}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;margin-bottom:18px;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--info),var(--purple));transition:width .4s}
+
+/* Classify */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:10px;font-size:12px;font-weight:600;transition:all .2s;margin:3px}
+.chip.pool{background:var(--cardAlt);border:1px solid var(--border);color:var(--text);cursor:pointer}
+.chip.pool:hover{border-color:var(--orange);color:var(--orange)}
+.chip.pool.selected{border:2px solid var(--orange);background:rgba(255,167,38,.12);color:var(--orange)}
+.chip.placed{cursor:pointer;font-size:11px}
+.drop-zone{border:2px dashed;border-radius:14px;padding:16px;min-height:140px;transition:all .3s}
+.drop-zone.ready{border-style:solid;background:rgba(66,165,245,.04)}
+
+/* VF */
+.vf-card{border-radius:12px;padding:14px;margin-bottom:10px;transition:all .3s}
+.vf-btn{padding:6px 16px;border-radius:8px;font-size:13px;font-weight:700;transition:all .2s}
+
+/* IO */
+.io-grid{display:grid;grid-template-columns:1fr 70px 1fr;gap:12px;align-items:stretch}
+@media(max-width:600px){.io-grid{grid-template-columns:1fr;text-align:center}}
+.reveal-btn{width:100%;padding:10px;border-radius:8px;border:1px dashed;background:transparent;font-size:13px;cursor:pointer;transition:all .2s}
+
+/* Simulator */
+.sim-step{border-radius:14px;padding:14px 16px;transition:all .5s;opacity:.45;transform:scale(.97)}
+.sim-step.active{opacity:1;transform:scale(1)}
+.pulse{width:10px;height:10px;border-radius:50%;transition:all .5s;flex-shrink:0}
+.sim-grid3{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+.sim-grid4{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+@media(max-width:700px){
+  .sim-grid3,.sim-grid4{grid-template-columns:1fr;gap:6px}
+  .sim-arrow-h{display:none}
+}
+.sim-arrow{display:flex;align-items:center;justify-content:center;font-size:20px;transition:color .4s}
+
+/* Score */
+.score-box{text-align:center;padding:20px;border-radius:14px;background:linear-gradient(135deg,rgba(66,165,245,.1),rgba(171,71,188,.1));margin-top:16px}
+
+/* Memo */
+.memo-item{border-radius:10px;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:all .3s}
+.memo-item:hover{border-color:var(--cyan)}
+
+/* Animations */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 10px rgba(255,167,38,.3)}50%{box-shadow:0 0 25px rgba(255,167,38,.6)}}
+.animate-in{animation:fadeIn .4s ease}
+.animate-pulse{animation:pulse 1.5s infinite}
+.animate-glow{animation:glow 2s infinite}
+
+/* Footer */
+.footer{text-align:center;padding:24px 16px;font-size:12px;color:var(--muted);border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+
+const quizData = [
+  {q:"Quel élément mesure une grandeur physique dans un système domotique ?",options:["L'actionneur","Le capteur","Le microcontrôleur","Le relais"],correct:1,explanation:"Le capteur mesure une grandeur physique (température, luminosité, présence…) et la transforme en signal exploitable."},
+  {q:"Quelle est la bonne séquence de la chaîne d'information ?",options:["Traiter → Acquérir → Communiquer","Communiquer → Traiter → Acquérir","Acquérir → Traiter → Communiquer","Acquérir → Communiquer → Traiter"],correct:2,explanation:"La chaîne d'information suit l'ordre : Acquérir → Traiter → Communiquer."},
+  {q:"Quel composant exécute le programme dans un système automatisé ?",options:["Le capteur","L'actionneur","L'unité de traitement (microcontrôleur)","Le relais"],correct:2,explanation:"L'unité de traitement (ex : carte Arduino) analyse les données et exécute le programme."},
+  {q:"Un moteur électrique est un exemple de :",options:["Capteur","Distributeur","Actionneur (convertisseur)","Source d'information"],correct:2,explanation:"Le moteur est un convertisseur : il transforme l'énergie électrique en énergie mécanique."},
+  {q:"Quelle est la différence entre un signal logique et un signal analogique ?",options:["Le logique est plus rapide","Le logique prend 2 valeurs (0/1), l'analogique varie continûment","L'analogique ne fonctionne qu'avec l'électricité","Aucune différence"],correct:1,explanation:"Signal logique = 2 états (0 ou 1). Signal analogique = infinité de valeurs continues."},
+  {q:"Dans la chaîne d'énergie, quel est le rôle de « Distribuer » ?",options:["Stocker l'énergie","Transformer l'énergie en mouvement","Contrôler le passage de l'énergie vers l'actionneur","Capter les informations"],correct:2,explanation:"Distribuer (relais, contacteurs) contrôle le passage de l'énergie selon les ordres reçus."},
+  {q:"Quel est le lien entre chaîne d'information et chaîne d'énergie ?",options:["Totalement indépendantes","L'info envoie des ordres à l'énergie","L'énergie alimente les capteurs uniquement","Elles fonctionnent en sens inverse"],correct:1,explanation:"La chaîne d'info (commande) envoie des ordres à la chaîne d'énergie (action)."},
+  {q:"Quelle source d'énergie alimente le plus souvent une maison domotique ?",options:["Éolienne","Secteur EDF (230V)","Hydraulique","Gaz naturel"],correct:1,explanation:"Le réseau électrique EDF (230V) alimente la majorité des systèmes domotiques."},
+];
+
+const vocabData = [
+  {term:"Objet connecté",def:"Objet technique capable de communiquer avec d'autres objets ou un réseau (WiFi, Bluetooth…)."},
+  {term:"Maison domotique",def:"Habitation dont les équipements sont automatisés et peuvent être pilotés à distance."},
+  {term:"Capteur",def:"Composant qui mesure une grandeur physique (température, luminosité, présence…) et la transforme en signal."},
+  {term:"Actionneur",def:"Composant qui réalise une action physique (moteur, lampe, radiateur, électrovanne…)."},
+  {term:"Unité de traitement",def:"Le « cerveau » du système : carte programmable (ex : Arduino) qui exécute le programme."},
+  {term:"Chaîne d'information",def:"Ensemble des fonctions qui captent, traitent et communiquent l'information (partie commande)."},
+  {term:"Chaîne d'énergie",def:"Ensemble des fonctions qui alimentent, distribuent, convertissent et transmettent l'énergie (partie action)."},
+  {term:"Signal logique",def:"Signal à 2 états possibles : 0 ou 1 (Tout ou Rien). Ex : bouton poussoir, détecteur de passage."},
+  {term:"Signal analogique",def:"Signal qui varie continûment avec une infinité de valeurs possibles. Ex : température, luminosité."},
+  {term:"Entrée du système",def:"Ce qui entre dans le système : consignes utilisateur et grandeurs physiques mesurées."},
+  {term:"Sortie du système",def:"Ce qui sort du système : informations affichées à l'utilisateur et action réalisée."},
+  {term:"Fonction d'usage",def:"Le service rendu par le système technique à l'utilisateur (ex : chauffer une pièce, éclairer)."},
+];
+
+const classifyItems = [
+  {name:"Capteur de température",chain:"info",step:"Acquérir"},
+  {name:"Carte Arduino",chain:"info",step:"Traiter"},
+  {name:"Écran LCD",chain:"info",step:"Communiquer"},
+  {name:"Détecteur de présence",chain:"info",step:"Acquérir"},
+  {name:"Programme informatique",chain:"info",step:"Traiter"},
+  {name:"Secteur EDF 230V",chain:"energy",step:"Alimenter"},
+  {name:"Relais",chain:"energy",step:"Distribuer"},
+  {name:"Moteur électrique",chain:"energy",step:"Convertir"},
+  {name:"Lampe (DEL)",chain:"energy",step:"Convertir"},
+  {name:"Engrenages",chain:"energy",step:"Transmettre"},
+  {name:"Batterie",chain:"energy",step:"Alimenter"},
+  {name:"Radiateur",chain:"energy",step:"Convertir"},
+  {name:"Bouton poussoir",chain:"info",step:"Acquérir"},
+  {name:"Contacteur",chain:"energy",step:"Distribuer"},
+  {name:"Voyant DEL",chain:"info",step:"Communiquer"},
+  {name:"Poulies-courroies",chain:"energy",step:"Transmettre"},
+];
+
+const schemaExercises = [
+  {title:"Éclairage automatique",context:"Un couloir s'éclaire automatiquement quand une personne passe, puis s'éteint après 30 secondes.",blanks:[
+    {label:"Capteur (Acquérir)",answer:"Détecteur de présence (infrarouge)",hint:"Quel capteur détecte le passage ?"},
+    {label:"Traitement",answer:"Microcontrôleur / Carte programmée",hint:"Quel composant exécute le programme ?"},
+    {label:"Ordre transmis",answer:"Allumer / Éteindre la lampe",hint:"Quel ordre est envoyé ?"},
+    {label:"Source d'énergie",answer:"Secteur EDF 230V",hint:"D'où vient l'électricité ?"},
+    {label:"Distributeur",answer:"Relais",hint:"Quel composant contrôle le courant ?"},
+    {label:"Convertisseur",answer:"Lampe (DEL)",hint:"Quel composant produit la lumière ?"},
+  ]},
+  {title:"Chauffage automatique",context:"Le chauffage se met en route quand T° < 19°C et s'arrête à 21°C.",blanks:[
+    {label:"Capteur (Acquérir)",answer:"Capteur de température",hint:"Que mesure-t-on ?"},
+    {label:"Traitement",answer:"Microcontrôleur avec programme",hint:"Qui compare avec les seuils ?"},
+    {label:"Ordre transmis",answer:"Allumer / Éteindre le radiateur",hint:"Que décide le programme ?"},
+    {label:"Source d'énergie",answer:"Secteur EDF 230V",hint:"Quelle source ?"},
+    {label:"Distributeur",answer:"Contacteur / Relais",hint:"Qui contrôle le passage ?"},
+    {label:"Convertisseur",answer:"Radiateur électrique",hint:"Qui produit la chaleur ?"},
+  ]},
+  {title:"Portail automatique",context:"Un portail s'ouvre à la télécommande et se referme après 20 secondes.",blanks:[
+    {label:"Capteur(s)",answer:"Récepteur télécommande + détecteur d'obstacle",hint:"Quels capteurs ?"},
+    {label:"Traitement",answer:"Carte électronique programmée",hint:"Qui gère l'ouverture ?"},
+    {label:"Ordre transmis",answer:"Ouvrir / Fermer le portail",hint:"Quels ordres ?"},
+    {label:"Source d'énergie",answer:"Secteur EDF (ou batterie)",hint:"Quelle énergie ?"},
+    {label:"Distributeur",answer:"Relais de puissance",hint:"Qui alimente le moteur ?"},
+    {label:"Convertisseur",answer:"Moteur électrique",hint:"Qui produit le mouvement ?"},
+  ]},
+];
+
+const vfQuestions = [
+  {q:"Un capteur transforme une grandeur physique en signal exploitable.",answer:true,expl:"C'est la définition même du capteur."},
+  {q:"La chaîne d'énergie précède la chaîne d'information.",answer:false,expl:"C'est l'inverse : l'information commande, l'énergie agit."},
+  {q:"Un moteur est un exemple de capteur.",answer:false,expl:"Un moteur est un actionneur (convertisseur d'énergie)."},
+  {q:"Un signal analogique ne prend que 2 valeurs.",answer:false,expl:"C'est le signal logique. L'analogique varie continûment."},
+  {q:"Le microcontrôleur est le « cerveau » du système automatisé.",answer:true,expl:"Il exécute le programme et prend les décisions."},
+  {q:"Un relais fait partie de la fonction « Distribuer ».",answer:true,expl:"Le relais contrôle le passage de l'énergie."},
+  {q:"La fonction d'usage d'un chauffage est de produire de l'électricité.",answer:false,expl:"Sa fonction est de chauffer, pas de produire de l'électricité."},
+  {q:"Les objets connectés peuvent communiquer entre eux.",answer:true,expl:"C'est le principe même de la domotique."},
+  {q:"Un détecteur de présence produit un signal analogique.",answer:false,expl:"Il produit un signal logique : 0 (absent) ou 1 (présent)."},
+  {q:"La chaîne d'info comprend Acquérir, Traiter et Communiquer.",answer:true,expl:"Ce sont bien les 3 fonctions de la chaîne d'information."},
+];
+
+const ioExercises = [
+  {system:"Store automatique",description:"Un store se ferme quand le vent est trop fort et s'ouvre au soleil.",entrees:["Vitesse du vent (anémomètre)","Luminosité (capteur)","Consigne utilisateur"],sorties:["Mouvement du store","Affichage état"]},
+  {system:"Alarme intrusion",description:"Une alarme se déclenche si un mouvement est détecté en l'absence du propriétaire.",entrees:["Détection mouvement (infrarouge)","Code activation (clavier)","Horaire programmé"],sorties:["Sirène d'alarme","Notification smartphone","Voyant lumineux"]},
+  {system:"Arrosage automatique",description:"Un jardin est arrosé quand le sol est sec, uniquement le soir.",entrees:["Humidité du sol","Heure (horloge)","Consigne utilisateur"],sorties:["Ouverture électrovanne","Affichage sur appli"]},
+];
+
+const simScenarios = [
+  {id:"light",name:"Éclairage",icon:"💡",description:"Un couloir s'éclaire quand quelqu'un passe",trigger:"Mouvement détecté",
+    chain:{acquerir:{label:"Détecteur de présence",signal:"Signal logique : 1",type:"logique"},traiter:{label:"Microcontrôleur",action:"Si présence=1 → allumer"},communiquer:{label:"Ordre envoyé",message:"ALLUMER"},alimenter:{label:"Secteur EDF 230V",source:"Réseau électrique"},distribuer:{label:"Relais",action:"Laisse passer le courant"},convertir:{label:"Lampe DEL",conversion:"Électrique → Lumineuse"},transmettre:{label:"—",detail:"(pas de transmission mécanique)"}},
+    result:"💡 La lumière s'allume !",resultOff:"🌑 Couloir sombre"},
+  {id:"heat",name:"Chauffage",icon:"🌡️",description:"Le chauffage se déclenche si T° < 19°C",trigger:"Température = 16°C",
+    chain:{acquerir:{label:"Capteur de température",signal:"Signal analogique : 16°C",type:"analogique"},traiter:{label:"Carte Arduino",action:"Si T°<19°C → chauffer"},communiquer:{label:"Ordre envoyé",message:"CHAUFFER"},alimenter:{label:"Secteur EDF 230V",source:"Réseau électrique"},distribuer:{label:"Contacteur",action:"Ferme le circuit"},convertir:{label:"Radiateur",conversion:"Électrique → Thermique"},transmettre:{label:"Convection",detail:"Air chaud se diffuse"}},
+    result:"🔥 Le radiateur chauffe !",resultOff:"❄️ Pièce froide"},
+  {id:"gate",name:"Portail",icon:"🚪",description:"Le portail s'ouvre à la télécommande",trigger:"Bouton appuyé",
+    chain:{acquerir:{label:"Récepteur radio",signal:"Signal logique : 1",type:"logique"},traiter:{label:"Carte électronique",action:"Si signal → ouvrir"},communiquer:{label:"Ordre envoyé",message:"OUVRIR"},alimenter:{label:"Secteur EDF 230V",source:"Réseau + batterie"},distribuer:{label:"Relais de puissance",action:"Active le moteur"},convertir:{label:"Moteur électrique",conversion:"Électrique → Mécanique"},transmettre:{label:"Crémaillère",detail:"Pignon entraîne le portail"}},
+    result:"🚪 Le portail s'ouvre !",resultOff:"🔒 Portail fermé"},
+  {id:"blind",name:"Volets",icon:"🪟",description:"Les volets se ferment à la tombée de la nuit",trigger:"Luminosité faible",
+    chain:{acquerir:{label:"Capteur de luminosité",signal:"Signal analogique : 50 lux",type:"analogique"},traiter:{label:"Microcontrôleur",action:"Si lux<100 → fermer"},communiquer:{label:"Ordre envoyé",message:"FERMER"},alimenter:{label:"Secteur EDF 230V",source:"Réseau électrique"},distribuer:{label:"Relais",action:"Active le moteur"},convertir:{label:"Moteur tubulaire",conversion:"Électrique → Mécanique"},transmettre:{label:"Axe d'enroulement",detail:"Le volet descend"}},
+    result:"🪟 Les volets se ferment !",resultOff:"☀️ Volets ouverts"},
+];
+
+// ══════════════════════════════════════════
+// FICHE 1 — COURS
+// ══════════════════════════════════════════
+
+function Fiche1() {
+  const [sub, setSub] = useState(0);
+  const subs = ["Synthèse","Chaîne Info","Chaîne Énergie","Vocabulaire","Quiz"];
+  return (
+    <div>
+      <div className="sub-tabs">{subs.map((s,i)=><button key={i} className={`sub-tab ${sub===i?"active":""}`} onClick={()=>setSub(i)}>{s}</button>)}</div>
+      {sub===0 && <Synthese/>}
+      {sub===1 && <ChaineInfo/>}
+      {sub===2 && <ChaineEnergie/>}
+      {sub===3 && <Vocabulaire/>}
+      {sub===4 && <Quiz/>}
+    </div>
+  );
+}
+
+function Synthese(){
+  return (<div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">🏠</span> Qu'est-ce qu'une maison domotique ?</div>
+      <p style={{fontSize:14,color:"var(--muted)"}}>Une maison domotique est une habitation équipée de <strong style={{color:"var(--text)"}}>systèmes automatisés</strong> et d'<strong style={{color:"var(--text)"}}>objets connectés</strong> capables de communiquer entre eux pour gérer automatiquement l'éclairage, le chauffage, les volets, l'alarme…</p>
+      <div className="tip">💡 <strong>Problématique DNB :</strong> Comment une maison peut-elle fonctionner automatiquement sans intervention humaine ?</div>
+    </div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--info)"}}><span className="icon">⚙️</span> Les deux chaînes fondamentales</div>
+      <p style={{fontSize:13,color:"var(--muted)",marginBottom:14}}>Tout système technique repose sur deux chaînes complémentaires :</p>
+      <div className="chain-box info">
+        <div style={{fontWeight:700,color:"var(--info)",marginBottom:8,fontSize:15}}>🔵 CHAÎNE D'INFORMATION (Partie Commande)</div>
+        <div className="steps-row">
+          <span className="step-badge info">Acquérir</span><span className="arrow">→</span>
+          <span className="step-badge info">Traiter</span><span className="arrow">→</span>
+          <span className="step-badge info">Communiquer</span>
+        </div>
+        <div style={{fontSize:13,color:"var(--muted)"}}>Capter → Analyser et décider → Transmettre les ordres</div>
+      </div>
+      <div style={{textAlign:"center",fontSize:22,color:"var(--orange)",margin:"4px 0"}}>⬇ ORDRES ⬇</div>
+      <div className="chain-box energy">
+        <div style={{fontWeight:700,color:"var(--energy)",marginBottom:8,fontSize:15}}>🟢 CHAÎNE D'ÉNERGIE (Partie Action)</div>
+        <div className="steps-row">
+          <span className="step-badge energy">Alimenter</span><span className="arrow">→</span>
+          <span className="step-badge energy">Distribuer</span><span className="arrow">→</span>
+          <span className="step-badge energy">Convertir</span><span className="arrow">→</span>
+          <span className="step-badge energy">Transmettre</span>
+        </div>
+        <div style={{fontSize:13,color:"var(--muted)"}}>Fournir l'énergie → Contrôler → Transformer → Agir</div>
+      </div>
+    </div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--purple)"}}><span className="icon">🎯</span> Exemple : chauffage automatique</div>
+      <div className="example"><strong style={{color:"var(--info)"}}>Chaîne d'info :</strong> Capteur mesure 16°C → Microcontrôleur compare avec 20°C → Ordre « allumer chauffage »</div>
+      <div className="example green" style={{marginTop:10}}><strong style={{color:"var(--energy)"}}>Chaîne d'énergie :</strong> Secteur EDF → Relais laisse passer le courant → Radiateur convertit en chaleur</div>
+    </div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--red)"}}><span className="icon">🌍</span> Impact environnemental</div>
+      <p style={{fontSize:14,color:"var(--muted)"}}>Une maison domotique consomme de l'énergie. Il faut <strong style={{color:"var(--text)"}}>limiter les consommations</strong>, utiliser des <strong style={{color:"var(--text)"}}>objets économes</strong> et réfléchir à l'<strong style={{color:"var(--text)"}}>impact écologique</strong>.</p>
+    </div>
+  </div>);
+}
+
+function ChaineInfo(){
+  const steps = [
+    {name:"Acquérir",icon:"📡",color:"var(--info)",desc:"Capter les informations de l'environnement ou les consignes de l'utilisateur.",composants:"Capteurs, boutons, interrupteurs",exemple:"Un capteur de luminosité détecte qu'il fait nuit."},
+    {name:"Traiter",icon:"🧠",color:"var(--purple)",desc:"Le « cerveau » analyse les données selon un programme.",composants:"Carte électronique, microcontrôleur (Arduino), programme",exemple:"Le programme vérifie : luminosité < seuil ? → Allumer."},
+    {name:"Communiquer",icon:"📤",color:"var(--cyan)",desc:"Envoyer les ordres à la chaîne d'énergie ou des infos à l'utilisateur.",composants:"Voyants (DEL), écrans LCD, câbles, WiFi/Bluetooth",exemple:"L'ordre 'allumer' est envoyé au relais."},
+  ];
+  return (<div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--info)"}}><span className="icon">🔵</span> La Chaîne d'Information — Partie Commande</div>
+      <p style={{fontSize:14,color:"var(--muted)"}}>Le <strong style={{color:"var(--text)"}}>cerveau</strong> du système : capte, analyse et transmet l'information.</p>
+    </div>
+    {steps.map((s,i)=>(
+      <div key={i} className="card" style={{borderLeft:`3px solid ${s.color}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <span style={{fontSize:28}}>{s.icon}</span>
+          <div><div style={{fontSize:11,color:"var(--muted)",textTransform:"uppercase",letterSpacing:1}}>Étape {i+1}</div><div style={{fontSize:18,fontWeight:700,color:s.color}}>{s.name}</div></div>
+        </div>
+        <p style={{fontSize:14,color:"var(--text)",marginBottom:8}}>{s.desc}</p>
+        <div style={{fontSize:13,color:"var(--muted)"}}><strong style={{color:"var(--orange)"}}>Composants :</strong> {s.composants}</div>
+        <div className="example">{s.exemple}</div>
+      </div>
+    ))}
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">📊</span> Nature des signaux</div>
+      <div className="grid2">
+        <div className="chain-box info" style={{margin:0}}><div style={{fontWeight:700,color:"var(--info)",marginBottom:6,fontSize:14}}>Signal Logique / Numérique</div><p style={{fontSize:13,color:"var(--muted)",margin:0}}>2 valeurs : <strong style={{color:"var(--text)"}}>0 ou 1</strong></p><div className="example" style={{fontSize:12}}>Ex : détecteur (0=absent, 1=présent)</div></div>
+        <div className="chain-box energy" style={{margin:0}}><div style={{fontWeight:700,color:"var(--energy)",marginBottom:6,fontSize:14}}>Signal Analogique</div><p style={{fontSize:13,color:"var(--muted)",margin:0}}>Infinité de <strong style={{color:"var(--text)"}}>valeurs continues</strong></p><div className="example" style={{fontSize:12}}>Ex : température (18,5°C → 22,3°C…)</div></div>
+      </div>
+    </div>
+  </div>);
+}
+
+function ChaineEnergie(){
+  const steps = [
+    {name:"Alimenter / Stocker",icon:"🔋",color:"var(--energy)",desc:"Fournir et stocker l'énergie nécessaire.",composants:"Secteur EDF (230V), piles, batteries"},
+    {name:"Distribuer",icon:"🔀",color:"#26a69a",desc:"Contrôler le passage de l'énergie vers l'actionneur.",composants:"Relais, contacteurs, vannes"},
+    {name:"Convertir",icon:"⚡",color:"var(--orange)",desc:"Transformer l'énergie pour réaliser l'action.",composants:"Moteurs, lampes, radiateurs"},
+    {name:"Transmettre",icon:"⚙️",color:"#8d6e63",desc:"Amener l'énergie à l'organe final.",composants:"Engrenages, poulies-courroies, réducteurs"},
+  ];
+  return (<div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--energy)"}}><span className="icon">🟢</span> La Chaîne d'Énergie — Partie Action</div>
+      <p style={{fontSize:14,color:"var(--muted)"}}>Le <strong style={{color:"var(--text)"}}>muscle</strong> du système : reçoit les ordres et <strong style={{color:"var(--text)"}}>agit physiquement</strong>.</p>
+    </div>
+    {steps.map((s,i)=>(
+      <div key={i} className="card" style={{borderLeft:`3px solid ${s.color}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <span style={{fontSize:28}}>{s.icon}</span>
+          <div><div style={{fontSize:11,color:"var(--muted)",textTransform:"uppercase",letterSpacing:1}}>Étape {i+1}</div><div style={{fontSize:18,fontWeight:700,color:s.color}}>{s.name}</div></div>
+        </div>
+        <p style={{fontSize:14,color:"var(--text)",marginBottom:8}}>{s.desc}</p>
+        <div style={{fontSize:13,color:"var(--muted)"}}><strong style={{color:"var(--orange)"}}>Composants :</strong> {s.composants}</div>
+      </div>
+    ))}
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">🔗</span> Le lien Info ↔ Énergie</div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,flexWrap:"wrap",padding:16,background:"rgba(255,255,255,.03)",borderRadius:12}}>
+        <div style={{background:"rgba(66,165,245,.12)",padding:"10px 18px",borderRadius:10,border:"1px solid rgba(66,165,245,.3)",textAlign:"center"}}>
+          <div style={{fontSize:12,color:"var(--info)",fontWeight:700}}>CHAÎNE D'INFO</div><div style={{fontSize:11,color:"var(--muted)"}}>Commande</div>
+        </div>
+        <div style={{textAlign:"center"}}><div style={{fontSize:22}}>➡️</div><div style={{fontSize:11,color:"var(--orange)",fontWeight:700}}>ORDRES</div></div>
+        <div style={{background:"rgba(102,187,106,.12)",padding:"10px 18px",borderRadius:10,border:"1px solid rgba(102,187,106,.3)",textAlign:"center"}}>
+          <div style={{fontSize:12,color:"var(--energy)",fontWeight:700}}>CHAÎNE D'ÉNERGIE</div><div style={{fontSize:11,color:"var(--muted)"}}>Action</div>
+        </div>
+      </div>
+      <div className="tip">💡 <strong>Retiens :</strong> L'information « décide », l'énergie « agit ». Complémentaires et indissociables !</div>
+    </div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--red)"}}><span className="icon">🔌</span> Sources d'énergie</div>
+      <div className="grid2">
+        <div className="chain-box energy" style={{margin:0}}><div style={{fontWeight:700,color:"var(--energy)",marginBottom:6}}>♻️ Renouvelables</div><p style={{fontSize:13,color:"var(--muted)",margin:0}}>Solaire, éolien, hydraulique, biomasse, géothermie</p></div>
+        <div style={{background:"rgba(239,57,53,.07)",border:"1px solid rgba(239,57,53,.25)",borderRadius:12,padding:18}}><div style={{fontWeight:700,color:"var(--red)",marginBottom:6}}>⛽ Non renouvelables</div><p style={{fontSize:13,color:"var(--muted)",margin:0}}>Fossiles (pétrole, gaz, charbon), nucléaire</p></div>
+      </div>
+    </div>
+  </div>);
+}
+
+function Vocabulaire(){
+  const [revealed, setRevealed] = useState({});
+  return (<div>
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">📖</span> Vocabulaire essentiel</div>
+      <p style={{fontSize:13,color:"var(--muted)",marginBottom:14}}>Essaie de retrouver la définition avant de cliquer !</p>
+      {vocabData.map((d,i)=>(
+        <div key={i} className="card flash" onClick={()=>setRevealed(p=>({...p,[i]:!p[i]}))} style={{background:revealed[i]?"rgba(255,167,38,.05)":"var(--card)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span className="term">{d.term}</span>
+            <span className={`arrow-icon ${revealed[i]?"open":""}`}>▼</span>
+          </div>
+          {revealed[i] && <div className="def animate-in">{d.def}</div>}
+        </div>
+      ))}
+    </div>
+  </div>);
+}
+
+function Quiz(){
+  const [cur, setCur] = useState(0);
+  const [ans, setAns] = useState({});
+  const [showResult, setShowResult] = useState(false);
+  const handleAns = (i) => { if(ans[cur]!==undefined) return; setAns(p=>({...p,[cur]:i})); };
+  const score = Object.entries(ans).filter(([k,v])=>v===quizData[k].correct).length;
+  const allDone = Object.keys(ans).length === quizData.length;
+
+  if(showResult){
+    const pct = Math.round((score/quizData.length)*100);
+    return (<div className="card"><div className="score-box">
+      <div style={{fontSize:48,marginBottom:8}}>{pct>=70?"🎯":pct>=50?"📚":"💪"}</div>
+      <div style={{fontSize:28,fontWeight:800,color:pct>=70?"var(--success)":"var(--orange)"}}>{score} / {quizData.length}</div>
+      <div style={{fontSize:14,color:"var(--muted)",marginTop:4}}>{pct>=70?"Excellent ! Prêt pour le DNB !":pct>=50?"Bien, revois les fiches.":"Continue à réviser !"}</div>
+      <button onClick={()=>{setCur(0);setAns({});setShowResult(false)}} style={{marginTop:16,padding:"10px 24px",borderRadius:10,background:"linear-gradient(135deg,var(--info),var(--purple))",color:"#fff",fontWeight:700,fontSize:14}}>Recommencer</button>
+    </div></div>);
+  }
+
+  const q = quizData[cur];
+  const answered = ans[cur]!==undefined;
+  return (<div className="card">
+    <div style={{display:"flex",justifyContent:"space-between",marginBottom:14}}>
+      <span style={{fontSize:13,color:"var(--muted)"}}>Question {cur+1}/{quizData.length}</span>
+      <span style={{fontSize:13,color:"var(--info)",fontWeight:700}}>Score : {score}</span>
+    </div>
+    <div className="progress-bar"><div className="fill" style={{width:`${((cur+1)/quizData.length)*100}%`}}/></div>
+    <p style={{fontSize:16,fontWeight:600,marginBottom:18}}>{q.q}</p>
+    {q.options.map((o,i)=>{
+      let cls = "quiz-option";
+      if(answered){ if(i===q.correct) cls+=" correct"; else if(i===ans[cur]) cls+=" wrong"; }
+      return <button key={i} className={`${cls} ${answered?"answered":""}`} onClick={()=>handleAns(i)}><span className="letter" style={{color:i===q.correct&&answered?"var(--success)":i===ans[cur]&&answered?"var(--error)":"var(--info)"}}>{String.fromCharCode(65+i)}.</span>{o}</button>;
+    })}
+    {answered && <div className={`tip ${ans[cur]===q.correct?"green":""}`} style={ans[cur]!==q.correct?{background:"rgba(239,57,53,.08)",borderColor:"rgba(239,57,53,.25)",color:"#ffab91"}:{}}>{ans[cur]===q.correct?"✅ ":"❌ "}{q.explanation}</div>}
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:18}}>
+      <button onClick={()=>setCur(c=>c-1)} disabled={cur===0} style={{padding:"9px 20px",borderRadius:10,border:"1px solid var(--border)",background:"transparent",color:cur===0?"var(--border)":"var(--text)",fontSize:14}}>← Précédent</button>
+      {cur<quizData.length-1 ? <button onClick={()=>setCur(c=>c+1)} style={{padding:"9px 20px",borderRadius:10,background:"linear-gradient(135deg,var(--info),var(--purple))",color:"#fff",fontWeight:700,fontSize:14}}>Suivant →</button>
+      : allDone ? <button onClick={()=>setShowResult(true)} style={{padding:"9px 20px",borderRadius:10,background:"linear-gradient(135deg,var(--success),#66bb6a)",color:"#fff",fontWeight:700,fontSize:14}}>Voir résultat 🎯</button>
+      : <span style={{fontSize:13,color:"var(--muted)",alignSelf:"center"}}>Réponds à toutes les questions</span>}
+    </div>
+  </div>);
+}
+
+// ══════════════════════════════════════════
+// FICHE 2 — EXERCICES
+// ══════════════════════════════════════════
+
+function Fiche2(){
+  const [sub, setSub] = useState(0);
+  const subs = ["Classer","Analyser","Vrai/Faux","Entrées/Sorties"];
+  return (
+    <div>
+      <div className="sub-tabs">{subs.map((s,i)=><button key={i} className={`sub-tab ${sub===i?"active":""}`} onClick={()=>setSub(i)}>{s}</button>)}</div>
+      {sub===0 && <ClassifyEx/>}
+      {sub===1 && <SchemaEx/>}
+      {sub===2 && <VFEx/>}
+      {sub===3 && <IOEx/>}
+    </div>
+  );
+}
+
+function ClassifyEx(){
+  const [shuffled] = useState(()=>[...classifyItems].sort(()=>Math.random()-.5));
+  const [placements, setPlacements] = useState({});
+  const [selected, setSelected] = useState(null);
+  const [showR, setShowR] = useState(false);
+  const remaining = shuffled.filter((_,i)=>placements[i]===undefined);
+  const zones = [{id:"info",label:"Chaîne d'Information",color:"var(--info)",icon:"🔵"},{id:"energy",label:"Chaîne d'Énergie",color:"var(--energy)",icon:"🟢"}];
+  const handleZone = (zid)=>{ if(selected===null) return; setPlacements(p=>({...p,[selected]:zid})); setSelected(null); };
+  const handleRemove = (idx)=>{ if(showR) return; setPlacements(p=>{const n={...p};delete n[idx];return n;}); };
+  const score = Object.entries(placements).filter(([i,z])=>shuffled[i].chain===z).length;
+  const total = Object.keys(placements).length;
+
+  return (<div className="card">
+    <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">🎯</span> Classe chaque composant</div>
+    <p style={{fontSize:13,color:"var(--muted)",marginBottom:16}}>Clique sur un composant puis sur la bonne chaîne. Reste {remaining.length} composant(s).</p>
+    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:18,minHeight:36}}>
+      {shuffled.map((item,i)=>{
+        if(placements[i]!==undefined) return null;
+        return <button key={i} className={`chip pool ${selected===i?"selected":""}`} onClick={()=>setSelected(selected===i?null:i)}>{item.name}</button>;
+      })}
+    </div>
+    <div className="grid2">
+      {zones.map(z=>(
+        <div key={z.id} className={`drop-zone ${selected!==null?"ready":""}`} style={{borderColor:selected!==null?z.color:`${z.color}40`}} onClick={()=>handleZone(z.id)}>
+          <div style={{fontWeight:700,color:z.color,fontSize:14,marginBottom:8}}>{z.icon} {z.label}</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+            {Object.entries(placements).filter(([_,zone])=>zone===z.id).map(([idx])=>{
+              const item=shuffled[idx]; const correct=showR?item.chain===z.id:null;
+              return <span key={idx} className="chip placed" onClick={(e)=>{e.stopPropagation();handleRemove(Number(idx))}}
+                style={{background:correct===true?"rgba(67,160,71,.15)":correct===false?"rgba(239,57,53,.15)":`rgba(66,165,245,.1)`,
+                  border:`1px solid ${correct===true?"var(--success)":correct===false?"var(--error)":z.color}40`,
+                  color:correct===true?"var(--success)":correct===false?"var(--red)":"var(--text)"}}>
+                {showR&&(correct?"✓ ":"✗ ")}{item.name}{showR&&!correct&&<span style={{fontSize:10,color:"var(--muted)"}}> →{item.chain==="info"?" Info":" Énergie"}</span>}
+              </span>;
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:14}}>
+      <button onClick={()=>{setPlacements({});setSelected(null);setShowR(false)}} style={{padding:"8px 18px",borderRadius:10,border:"1px solid var(--border)",background:"transparent",color:"var(--muted)",fontSize:13}}>Réinitialiser</button>
+      {remaining.length===0&&!showR&&<button onClick={()=>setShowR(true)} style={{padding:"9px 20px",borderRadius:10,background:"linear-gradient(135deg,var(--info),var(--purple))",color:"#fff",fontWeight:700,fontSize:14}}>Vérifier</button>}
+      {showR&&<div style={{fontSize:16,fontWeight:700,color:score===total?"var(--success)":"var(--orange)"}}>{score}/{total} corrects</div>}
+    </div>
+  </div>);
+}
+
+function SchemaEx(){
+  const [exIdx, setExIdx] = useState(0);
+  const [inputs, setInputs] = useState({});
+  const [hints, setHints] = useState({});
+  const [revealed, setRevealed] = useState({});
+  const ex = schemaExercises[exIdx];
+  const k = (i)=>`${exIdx}-${i}`;
+  return (<div className="card">
+    <div className="card-title" style={{color:"var(--purple)"}}><span className="icon">📝</span> Complète l'analyse du système</div>
+    <div className="sub-tabs">{schemaExercises.map((s,i)=><button key={i} className={`sub-tab ${exIdx===i?"active":""}`} onClick={()=>setExIdx(i)}>{s.title}</button>)}</div>
+    <div className="tip purple" style={{marginBottom:16,marginTop:0}}><strong>{ex.title}</strong> — {ex.context}</div>
+    {ex.blanks.map((b,i)=>{
+      const isI=i<3; const col=isI?"var(--info)":"var(--energy)";
+      return (<div key={i} style={{background:isI?"rgba(66,165,245,.05)":"rgba(102,187,106,.05)",border:`1px solid ${isI?"rgba(66,165,245,.2)":"rgba(102,187,106,.2)"}`,borderRadius:12,padding:14,marginBottom:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexWrap:"wrap",gap:6}}>
+          <span style={{fontSize:13,fontWeight:700,color:col}}>{isI?"🔵":"🟢"} {b.label}</span>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setHints(p=>({...p,[k(i)]:!p[k(i)]}))} style={{fontSize:11,padding:"3px 10px",borderRadius:6,border:"1px solid rgba(255,167,38,.3)",background:"transparent",color:"var(--orange)"}}>{hints[k(i)]?"Masquer":"💡 Indice"}</button>
+            <button onClick={()=>setRevealed(p=>({...p,[k(i)]:!p[k(i)]}))} style={{fontSize:11,padding:"3px 10px",borderRadius:6,border:"1px solid rgba(67,160,71,.3)",background:"transparent",color:"var(--success)"}}>{revealed[k(i)]?"Masquer":"👁 Réponse"}</button>
+          </div>
+        </div>
+        {hints[k(i)]&&<div className="animate-in" style={{fontSize:12,color:"var(--orange)",background:"rgba(255,167,38,.08)",padding:"6px 10px",borderRadius:6,marginBottom:8}}>💡 {b.hint}</div>}
+        <input type="text" placeholder="Ta réponse…" value={inputs[k(i)]||""} onChange={e=>setInputs(p=>({...p,[k(i)]:e.target.value}))}
+          style={{width:"100%",padding:"10px 14px",borderRadius:8,border:"1px solid var(--border)",background:"var(--cardAlt)",color:"var(--text)",fontSize:14}}/>
+        {revealed[k(i)]&&<div className="animate-in" style={{fontSize:13,color:"var(--success)",marginTop:6,fontWeight:600}}>✅ {b.answer}</div>}
+      </div>);
+    })}
+  </div>);
+}
+
+function VFEx(){
+  const [ans, setAns] = useState({});
+  const handleAns = (i,v)=>{ if(ans[i]!==undefined) return; setAns(p=>({...p,[i]:v})); };
+  const score = Object.entries(ans).filter(([i,v])=>v===vfQuestions[i].answer).length;
+  const allDone = Object.keys(ans).length===vfQuestions.length;
+  return (<div className="card">
+    <div className="card-title" style={{color:"var(--info)"}}><span className="icon">✅❌</span> Vrai ou Faux</div>
+    {vfQuestions.map((q,i)=>{
+      const answered=ans[i]!==undefined; const correct=answered?ans[i]===q.answer:null;
+      return (<div key={i} className="vf-card" style={{background:answered?(correct?"rgba(67,160,71,.06)":"rgba(239,57,53,.06)"):"var(--cardAlt)",border:`1px solid ${answered?(correct?"rgba(67,160,71,.25)":"rgba(239,57,53,.25)"):"var(--border)"}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+          <p style={{fontSize:14,flex:1,lineHeight:1.5}}>{q.q}</p>
+          <div style={{display:"flex",gap:6,flexShrink:0}}>
+            <button className="vf-btn" onClick={()=>handleAns(i,true)} style={{border:ans[i]===true?"none":"1px solid rgba(67,160,71,.3)",background:ans[i]===true?(correct?"var(--success)":"var(--error)"):"transparent",color:ans[i]===true?"#fff":"var(--success)"}}>VRAI</button>
+            <button className="vf-btn" onClick={()=>handleAns(i,false)} style={{border:ans[i]===false?"none":"1px solid rgba(239,57,53,.3)",background:ans[i]===false?(correct?"var(--success)":"var(--error)"):"transparent",color:ans[i]===false?"#fff":"var(--red)"}}>FAUX</button>
+          </div>
+        </div>
+        {answered&&<div className="animate-in" style={{fontSize:12,color:correct?"var(--success)":"#ffab91",marginTop:8,borderTop:"1px solid var(--border)",paddingTop:8}}>{correct?"✅":"❌"} {q.expl}</div>}
+      </div>);
+    })}
+    {allDone&&<div className="score-box">
+      <div style={{fontSize:36,marginBottom:6}}>{score>=8?"🎯":score>=5?"📚":"💪"}</div>
+      <div style={{fontSize:24,fontWeight:800,color:score>=8?"var(--success)":"var(--orange)"}}>{score}/{vfQuestions.length}</div>
+      <button onClick={()=>setAns({})} style={{marginTop:12,padding:"8px 20px",borderRadius:10,background:"linear-gradient(135deg,var(--info),var(--purple))",color:"#fff",fontWeight:700,fontSize:13}}>Recommencer</button>
+    </div>}
+  </div>);
+}
+
+function IOEx(){
+  const [exIdx, setExIdx] = useState(0);
+  const [showA, setShowA] = useState({});
+  const ex = ioExercises[exIdx];
+  return (<div className="card">
+    <div className="card-title" style={{color:"var(--energy)"}}><span className="icon">🔄</span> Entrées / Sorties</div>
+    <div className="sub-tabs">{ioExercises.map((s,i)=><button key={i} className={`sub-tab ${exIdx===i?"active":""}`} onClick={()=>{setExIdx(i);setShowA({})}}>{s.system}</button>)}</div>
+    <div className="tip green" style={{marginBottom:16,marginTop:0}}><strong>{ex.system}</strong> — {ex.description}</div>
+    <div className="io-grid">
+      <div style={{background:"rgba(66,165,245,.06)",border:"1px solid rgba(66,165,245,.2)",borderRadius:12,padding:16}}>
+        <div style={{fontWeight:700,color:"var(--info)",fontSize:14,marginBottom:10}}>📥 ENTRÉES</div>
+        {showA.e ? ex.entrees.map((e,i)=><div key={i} className="animate-in" style={{fontSize:13,color:"var(--text)",padding:"6px 10px",background:"rgba(66,165,245,.08)",borderRadius:6,marginBottom:6}}>▸ {e}</div>)
+        : <button className="reveal-btn" onClick={()=>setShowA(p=>({...p,e:true}))} style={{borderColor:"rgba(66,165,245,.3)",color:"var(--info)"}}>Révéler</button>}
+      </div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+        <div style={{fontSize:18}}>→</div>
+        <div style={{background:"rgba(255,167,38,.1)",border:"1px solid rgba(255,167,38,.3)",borderRadius:8,padding:"8px 6px",fontSize:11,fontWeight:700,color:"var(--orange)",writingMode:"vertical-rl",transform:"rotate(180deg)"}}>SYSTÈME</div>
+        <div style={{fontSize:18}}>→</div>
+      </div>
+      <div style={{background:"rgba(102,187,106,.06)",border:"1px solid rgba(102,187,106,.2)",borderRadius:12,padding:16}}>
+        <div style={{fontWeight:700,color:"var(--energy)",fontSize:14,marginBottom:10}}>📤 SORTIES</div>
+        {showA.s ? ex.sorties.map((s,i)=><div key={i} className="animate-in" style={{fontSize:13,color:"var(--text)",padding:"6px 10px",background:"rgba(102,187,106,.08)",borderRadius:6,marginBottom:6}}>▸ {s}</div>)
+        : <button className="reveal-btn" onClick={()=>setShowA(p=>({...p,s:true}))} style={{borderColor:"rgba(102,187,106,.3)",color:"var(--energy)"}}>Révéler</button>}
+      </div>
+    </div>
+  </div>);
+}
+
+// ══════════════════════════════════════════
+// FICHE 3 — SIMULATEUR
+// ══════════════════════════════════════════
+
+function Fiche3(){
+  const [scIdx, setScIdx] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [step, setStep] = useState(-1);
+  const [auto, setAuto] = useState(false);
+  const timerRef = useRef(null);
+  const sc = simScenarios[scIdx];
+  const totalSteps = 7;
+
+  const reset = ()=>{ setRunning(false);setStep(-1);setAuto(false);if(timerRef.current)clearInterval(timerRef.current); };
+  const startAuto = ()=>{ reset();setRunning(true);setAuto(true);let s=0;setStep(0);timerRef.current=setInterval(()=>{s++;if(s>totalSteps){clearInterval(timerRef.current);return;}setStep(s);},1200); };
+  const nextStep = ()=>{ if(!running){setRunning(true);setStep(0);}else if(step<totalSteps){setStep(s=>s+1);} };
+
+  useEffect(()=>reset(),[scIdx]);
+  useEffect(()=>()=>{if(timerRef.current)clearInterval(timerRef.current);},[]);
+
+  const isA = (n)=>step>=n;
+  const order = step>=3;
+
+  const SimStep = ({label,color,active,children,detail})=>(
+    <div className={`sim-step ${active?"active":""}`} style={{background:active?`${color}12`:"var(--cardAlt)",border:`1.5px solid ${active?color:"var(--border)"}`,boxShadow:active?`0 0 16px ${color}25`:"none"}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+        <div className={`pulse ${active?"animate-pulse":""}`} style={{background:active?color:`${color}30`,boxShadow:active?`0 0 12px ${color}`:"none"}}/>
+        <span style={{fontSize:13,fontWeight:700,color:active?color:"var(--muted)"}}>{label}</span>
+      </div>
+      {children}
+      {active&&detail&&<div className="animate-in" style={{fontSize:12,color:"var(--muted)",marginTop:6,background:`${color}08`,padding:"6px 10px",borderRadius:6}}>{detail}</div>}
+    </div>
+  );
+
+  const Arrow = ({active,color})=><div className="sim-arrow sim-arrow-h" style={{color:active?color:`${color}30`,filter:active?`drop-shadow(0 0 4px ${color})`:"none"}}>→</div>;
+
+  const [memoOpen, setMemoOpen] = useState({});
+  const memoItems = [
+    {q:"Qu'est-ce qu'un système automatisé ?",a:"Un système qui fonctionne seul grâce à des capteurs, un programme et des actionneurs."},
+    {q:"Les 3 fonctions de la chaîne d'information ?",a:"Acquérir → Traiter → Communiquer."},
+    {q:"Les 4 fonctions de la chaîne d'énergie ?",a:"Alimenter → Distribuer → Convertir → Transmettre."},
+    {q:"Comment les deux chaînes sont-elles liées ?",a:"L'information envoie des ORDRES à l'énergie. L'info commande, l'énergie agit."},
+    {q:"Signal logique vs analogique ?",a:"Logique = 2 valeurs (0/1). Analogique = infinité de valeurs continues."},
+    {q:"Entrées / Sorties ?",a:"Entrées = grandeurs physiques + consignes. Sorties = actions + infos affichées."},
+  ];
+
+  return (<div>
+    {/* Scenario selector */}
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">🏠</span> Simulateur de système domotique</div>
+      <p style={{fontSize:12,color:"var(--muted)",marginBottom:14}}>Choisis un scénario et observe le flux étape par étape</p>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+        {simScenarios.map((s,i)=><button key={i} className={`sub-tab ${scIdx===i?"active":""}`} onClick={()=>setScIdx(i)}>{s.icon} {s.name}</button>)}
+      </div>
+      <div className="tip" style={{marginTop:0}}><strong>{sc.description}</strong> — ⚡ Déclencheur : {sc.trigger}</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginTop:14}}>
+        <button onClick={startAuto} disabled={auto&&step<=totalSteps} style={{padding:"10px 22px",borderRadius:10,background:"linear-gradient(135deg,var(--info),var(--purple))",color:"#fff",fontWeight:700,fontSize:14,opacity:auto&&step<=totalSteps?.5:1}}>▶ Lecture auto</button>
+        <button onClick={nextStep} disabled={auto||step>=totalSteps} style={{padding:"10px 22px",borderRadius:10,border:"1px solid var(--info)",background:"transparent",color:"var(--info)",fontWeight:700,fontSize:14,opacity:auto||step>=totalSteps?.5:1}}>Étape suivante →</button>
+        <button onClick={reset} style={{padding:"10px 22px",borderRadius:10,border:"1px solid var(--border)",background:"transparent",color:"var(--muted)",fontSize:14}}>↺ Reset</button>
+      </div>
+    </div>
+
+    {/* Chain diagram */}
+    <div className="card">
+      <div className="progress-bar"><div className="fill" style={{width:`${running?((Math.min(step+1,totalSteps+1))/(totalSteps+1))*100:0}%`,background:"linear-gradient(90deg,var(--info),var(--orange),var(--energy))"}}/></div>
+
+      <div style={{fontSize:13,fontWeight:700,color:"var(--info)",textTransform:"uppercase",letterSpacing:1.5,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:isA(0)?"var(--info)":"rgba(66,165,245,.2)",boxShadow:isA(0)?"0 0 10px var(--info)":"none"}}/>
+        Chaîne d'Information
+      </div>
+      <div className="sim-grid3">
+        <SimStep label="1. Acquérir" color="var(--info)" active={isA(0)} detail={sc.chain.acquerir.signal}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.acquerir.label}</div>
+          {isA(0)&&<div style={{display:"inline-block",marginTop:4,padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:600,
+            background:sc.chain.acquerir.type==="logique"?"rgba(66,165,245,.15)":"rgba(102,187,106,.15)",
+            color:sc.chain.acquerir.type==="logique"?"var(--info)":"var(--energy)",
+            border:`1px solid ${sc.chain.acquerir.type==="logique"?"rgba(66,165,245,.3)":"rgba(102,187,106,.3)"}`}}>
+            {sc.chain.acquerir.type==="logique"?"Signal Logique":"Signal Analogique"}</div>}
+        </SimStep>
+        <Arrow active={isA(1)} color="var(--info)"/>
+        <SimStep label="2. Traiter" color="var(--purple)" active={isA(1)} detail={sc.chain.traiter.action}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.traiter.label}</div>
+          {isA(1)&&<div style={{fontSize:11,color:"var(--purple)",marginTop:3}}>🧠 Programme…</div>}
+        </SimStep>
+        <Arrow active={isA(2)} color="var(--cyan)"/>
+        <SimStep label="3. Communiquer" color="var(--cyan)" active={isA(2)} detail={sc.chain.communiquer.message}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.communiquer.label}</div>
+        </SimStep>
+      </div>
+
+      <div style={{textAlign:"center",padding:"10px 0"}}>
+        <span className={order?"animate-glow":""} style={{display:"inline-block",padding:"6px 20px",borderRadius:20,fontSize:12,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",
+          background:order?"linear-gradient(135deg,var(--orange),#ff7043)":"var(--cardAlt)",color:order?"#fff":"var(--muted)",border:`1px solid ${order?"var(--orange)":"var(--border)"}`,transition:"all .5s"}}>
+          ⬇ ORDRES ⬇
+        </span>
+      </div>
+
+      <div style={{fontSize:13,fontWeight:700,color:"var(--energy)",textTransform:"uppercase",letterSpacing:1.5,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:isA(4)?"var(--energy)":"rgba(102,187,106,.2)",boxShadow:isA(4)?"0 0 10px var(--energy)":"none"}}/>
+        Chaîne d'Énergie
+      </div>
+      <div className="sim-grid4">
+        <SimStep label="1. Alimenter" color="var(--energy)" active={isA(4)} detail={sc.chain.alimenter.source}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.alimenter.label}</div>
+        </SimStep>
+        <Arrow active={isA(5)} color="var(--energy)"/>
+        <SimStep label="2. Distribuer" color="#26a69a" active={isA(5)} detail={sc.chain.distribuer.action}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.distribuer.label}</div>
+        </SimStep>
+        <Arrow active={isA(6)} color="var(--orange)"/>
+        <SimStep label="3. Convertir" color="var(--orange)" active={isA(6)} detail={sc.chain.convertir.conversion}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.convertir.label}</div>
+        </SimStep>
+        <Arrow active={isA(7)} color="#8d6e63"/>
+        <SimStep label="4. Transmettre" color="#8d6e63" active={isA(7)} detail={sc.chain.transmettre.detail}>
+          <div style={{fontSize:13,fontWeight:600}}>{sc.chain.transmettre.label}</div>
+        </SimStep>
+      </div>
+
+      {/* Result */}
+      <div style={{textAlign:"center",marginTop:18,padding:18,borderRadius:14,
+        background:step>=totalSteps?"linear-gradient(135deg,rgba(102,187,106,.1),rgba(255,167,38,.1))":"var(--cardAlt)",
+        border:`1px solid ${step>=totalSteps?"var(--energy)":"var(--border)"}`,transition:"all .5s"}}>
+        <div style={{fontSize:36,marginBottom:4}}>{step>=totalSteps?sc.icon:"⏳"}</div>
+        <div style={{fontSize:18,fontWeight:700,color:step>=totalSteps?"var(--energy)":"var(--muted)"}}>{step>=totalSteps?sc.result:running?"Simulation en cours…":sc.resultOff}</div>
+        {step>=totalSteps&&<div className="animate-in" style={{fontSize:12,color:"var(--muted)",marginTop:4}}>✅ Fonctionnement autonome, sans intervention humaine !</div>}
+      </div>
+    </div>
+
+    {/* Summary */}
+    <div className="card">
+      <div className="card-title" style={{color:"var(--orange)"}}><span className="icon">📋</span> Résumé : {sc.name}</div>
+      <div className="grid2">
+        <div style={{background:"rgba(66,165,245,.06)",border:"1px solid rgba(66,165,245,.2)",borderRadius:12,padding:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--info)",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Chaîne d'Information</div>
+          {["acquerir","traiter","communiquer"].map(s=><div key={s} style={{fontSize:12,marginBottom:4,display:"flex",gap:6}}><span style={{color:"var(--info)",fontWeight:700,minWidth:80}}>{{acquerir:"Acquérir",traiter:"Traiter",communiquer:"Communiquer"}[s]}</span><span style={{color:"var(--muted)"}}>{sc.chain[s].label}</span></div>)}
+        </div>
+        <div style={{background:"rgba(102,187,106,.06)",border:"1px solid rgba(102,187,106,.2)",borderRadius:12,padding:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:"var(--energy)",marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Chaîne d'Énergie</div>
+          {["alimenter","distribuer","convertir","transmettre"].map(s=><div key={s} style={{fontSize:12,marginBottom:4,display:"flex",gap:6}}><span style={{color:"var(--energy)",fontWeight:700,minWidth:80}}>{{alimenter:"Alimenter",distribuer:"Distribuer",convertir:"Convertir",transmettre:"Transmettre"}[s]}</span><span style={{color:"var(--muted)"}}>{sc.chain[s].label}</span></div>)}
+        </div>
+      </div>
+    </div>
+
+    {/* Memo */}
+    <div className="card">
+      <div className="card-title" style={{color:"var(--cyan)"}}><span className="icon">🧠</span> Fiche Mémo Express — DNB</div>
+      {memoItems.map((m,i)=>(
+        <div key={i} className="memo-item" onClick={()=>setMemoOpen(p=>({...p,[i]:!p[i]}))}
+          style={{background:memoOpen[i]?"rgba(38,198,218,.06)":"var(--cardAlt)",border:`1px solid ${memoOpen[i]?"rgba(38,198,218,.3)":"var(--border)"}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:14,fontWeight:600,color:memoOpen[i]?"var(--cyan)":"var(--text)"}}>{m.q}</span>
+            <span style={{fontSize:16,color:"var(--muted)",transform:memoOpen[i]?"rotate(180deg)":"none",transition:"transform .3s"}}>▼</span>
+          </div>
+          {memoOpen[i]&&<p className="animate-in" style={{fontSize:13,color:"var(--muted)",margin:"10px 0 0",borderTop:"1px solid var(--border)",paddingTop:10}}>✅ {m.a}</p>}
+        </div>
+      ))}
+    </div>
+  </div>);
+}
+
+// ══════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════
+
+function App(){
+  const [tab, setTab] = useState(0);
+  const tabs = [
+    {label:"📚 Cours",desc:"Fiches de synthèse"},
+    {label:"✏️ Exercices",desc:"Entraînement type DNB"},
+    {label:"⚡ Simulateur",desc:"Schéma animé"},
+  ];
+  return (
+    <div>
+      <header className="app-header">
+        <div className="badge">Révision DNB · Technologie · 3ème</div>
+        <h1>🏠 La Maison Domotique</h1>
+        <p>Scénario 3 — Systèmes automatisés & objets connectés — BO 2020</p>
+      </header>
+      <nav className="main-tabs">
+        {tabs.map((t,i)=><button key={i} className={`main-tab ${tab===i?"active":""}`} onClick={()=>setTab(i)}>{t.label}</button>)}
+      </nav>
+      <div className="content">
+        {tab===0 && <Fiche1/>}
+        {tab===1 && <Fiche2/>}
+        {tab===2 && <Fiche3/>}
+      </div>
+      <footer className="footer">
+        Fiches de révision interactives · DNB Technologie · Maison domotique · Programme BO 2020<br/>
+        <span style={{fontSize:11}}>Créé avec ❤️ pour les élèves de 3ème</span>
+      </footer>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("app"));
+</script>
+</body>
+</html>
