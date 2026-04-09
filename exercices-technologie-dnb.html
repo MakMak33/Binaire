@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Révisions DNB – Impact environnemental des objets techniques</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Fraunces:ital,wght@0,700;0,900;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c1117;
+            --surface: #151d27;
+            --surface-hover: #1c2736;
+            --border: #243042;
+            --text: #e4e8ee;
+            --text-muted: #8694a8;
+            --accent: #34d399;
+            --accent-dim: rgba(52, 211, 153, 0.12);
+            --accent-glow: rgba(52, 211, 153, 0.25);
+            --wrong: #f87171;
+            --wrong-dim: rgba(248, 113, 113, 0.12);
+            --warning: #fbbf24;
+            --warning-dim: rgba(251, 191, 36, 0.12);
+            --fiche1: #34d399;
+            --fiche2: #60a5fa;
+            --fiche3: #c084fc;
+            --fiche4: #fb923c;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.07;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glow-orb.green { background: var(--accent); top: -200px; right: -200px; }
+        .glow-orb.blue { background: var(--fiche2); bottom: -200px; left: -200px; }
+
+        .container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── HEADER ─── */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 1rem;
+        }
+        header .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: var(--accent-dim);
+            border: 1px solid rgba(52,211,153,0.2);
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            margin-bottom: 1.2rem;
+        }
+        header h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 900;
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            line-height: 1.15;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, #e4e8ee 0%, #8694a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        /* ─── PROGRESS BAR ─── */
+        .progress-zone {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+        .progress-zone .label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .progress-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--bg);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), var(--fiche2));
+            border-radius: 99px;
+            transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .progress-zone .count {
+            font-family: 'Fraunces', serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* ─── EXERCISE CARD ─── */
+        .exercise-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            animation: cardIn 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .fiche-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .fiche-badge.f1 { background: rgba(52,211,153,0.15); color: var(--fiche1); border: 1px solid rgba(52,211,153,0.25); }
+        .fiche-badge.f2 { background: rgba(96,165,250,0.15); color: var(--fiche2); border: 1px solid rgba(96,165,250,0.25); }
+        .fiche-badge.f3 { background: rgba(192,132,252,0.15); color: var(--fiche3); border: 1px solid rgba(192,132,252,0.25); }
+        .fiche-badge.f4 { background: rgba(251,146,60,0.15); color: var(--fiche4); border: 1px solid rgba(251,146,60,0.25); }
+
+        .exercise-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .card-body { padding: 1.5rem; }
+        .question-text {
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        /* ─── QCM OPTIONS ─── */
+        .options-list { display: flex; flex-direction: column; gap: 0.6rem; }
+        .option-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.9rem 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.92rem;
+            color: var(--text);
+            text-align: left;
+            width: 100%;
+            font-family: inherit;
+        }
+        .option-btn:hover:not(.disabled) {
+            background: var(--surface-hover);
+            border-color: rgba(52,211,153,0.3);
+        }
+        .option-letter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .option-btn.correct {
+            background: var(--accent-dim);
+            border-color: var(--accent);
+        }
+        .option-btn.correct .option-letter {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+        }
+        .option-btn.wrong {
+            background: var(--wrong-dim);
+            border-color: var(--wrong);
+        }
+        .option-btn.wrong .option-letter {
+            background: var(--wrong);
+            color: #fff;
+            border-color: var(--wrong);
+        }
+        .option-btn.disabled { pointer-events: none; opacity: 0.6; }
+        .option-btn.correct.disabled, .option-btn.wrong.disabled { opacity: 1; }
+
+        /* ─── DRAG & DROP ─── */
+        .drag-zone {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            min-height: 52px;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 1.5px dashed var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+        }
+        .drag-zone.over { border-color: var(--accent); background: var(--accent-dim); }
+        .drag-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: var(--surface-hover);
+            border: 1.5px solid var(--border);
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: grab;
+            user-select: none;
+            transition: all 0.2s;
+            touch-action: none;
+        }
+        .drag-item:active { cursor: grabbing; opacity: 0.7; }
+        .drag-item.placed { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+        .drop-targets { display: flex; flex-direction: column; gap: 0.75rem; }
+        .drop-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .drop-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            width: 160px;
+            flex-shrink: 0;
+            color: var(--text-muted);
+        }
+        .drop-target {
+            flex: 1;
+            min-height: 44px;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg);
+            border: 1.5px dashed var(--border);
+            border-radius: var(--radius-sm);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+        }
+        .drop-target.over { border-color: var(--accent); background: var(--accent-dim); }
+        .drop-target.correct-zone { border-color: var(--accent); border-style: solid; }
+        .drop-target.wrong-zone { border-color: var(--wrong); border-style: solid; }
+
+        /* ─── ORDER EXERCISE ─── */
+        .order-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.85rem 1rem;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .order-item:active { cursor: grabbing; }
+        .order-item .num {
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            font-weight: 700; font-size: 0.8rem; color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .order-item.drag-over { border-color: var(--accent); background: var(--accent-dim); }
+        .order-item.correct-pos { border-color: var(--accent); }
+        .order-item.correct-pos .num { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+        .order-item.wrong-pos { border-color: var(--wrong); }
+        .order-item.wrong-pos .num { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+
+        /* ─── TRUE/FALSE ─── */
+        .tf-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 1rem;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.6rem;
+        }
+        .tf-statement { flex: 1; font-size: 0.92rem; line-height: 1.5; }
+        .tf-btns { display: flex; gap: 0.4rem; flex-shrink: 0; }
+        .tf-btn {
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .tf-btn:hover:not(.disabled) { border-color: var(--accent); color: var(--text); }
+        .tf-btn.selected-correct { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+        .tf-btn.selected-wrong { background: var(--wrong-dim); border-color: var(--wrong); color: var(--wrong); }
+        .tf-btn.disabled { pointer-events: none; }
+        .tf-btn.was-correct { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+        /* ─── FILL BLANKS ─── */
+        .fill-text {
+            font-size: 0.95rem;
+            line-height: 2.2;
+        }
+        .blank-slot {
+            display: inline-flex;
+            align-items: center;
+            min-width: 120px;
+            padding: 0.2rem 0.6rem;
+            margin: 0 0.15rem;
+            background: var(--bg);
+            border: 1.5px dashed var(--border);
+            border-radius: 6px;
+            vertical-align: middle;
+            min-height: 32px;
+            transition: all 0.2s;
+        }
+        .blank-slot.over { border-color: var(--accent); background: var(--accent-dim); }
+        .blank-slot.filled { border-style: solid; }
+        .blank-slot.correct-slot { border-color: var(--accent); background: var(--accent-dim); }
+        .blank-slot.wrong-slot { border-color: var(--wrong); background: var(--wrong-dim); }
+
+        /* ─── FEEDBACK ─── */
+        .feedback {
+            margin-top: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: none;
+            animation: feedbackIn 0.3s ease;
+        }
+        @keyframes feedbackIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feedback.show { display: block; }
+        .feedback.success { background: var(--accent-dim); border: 1px solid rgba(52,211,153,0.25); color: var(--accent); }
+        .feedback.error { background: var(--wrong-dim); border: 1px solid rgba(248,113,113,0.25); color: var(--wrong); }
+        .feedback.partial { background: var(--warning-dim); border: 1px solid rgba(251,191,36,0.25); color: var(--warning); }
+
+        /* ─── BUTTONS ─── */
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        .btn-primary:hover { box-shadow: 0 0 24px var(--accent-glow); }
+        .btn-secondary {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+        /* ─── SCORE PANEL ─── */
+        .score-panel {
+            display: none;
+            text-align: center;
+            padding: 3rem 2rem;
+            animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .score-panel.show { display: block; }
+        .score-circle {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            border: 4px solid var(--accent);
+            background: var(--accent-dim);
+        }
+        .score-circle .big {
+            font-family: 'Fraunces', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .score-circle .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .score-msg {
+            font-family: 'Fraunces', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .score-detail { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .container { padding: 1rem 1rem 3rem; }
+            .drop-row { flex-direction: column; align-items: stretch; }
+            .drop-label { width: auto; }
+            .progress-zone { flex-wrap: wrap; }
+            .tf-row { flex-direction: column; }
+            .tf-btns { align-self: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="noise-overlay"></div>
+<div class="glow-orb green"></div>
+<div class="glow-orb blue"></div>
+
+<div class="container">
+    <header>
+        <div class="tag">Révisions DNB – Technologie 3e</div>
+        <h1>Impact environnemental des objets techniques</h1>
+        <p>Entraîne-toi sur les 4 fiches de connaissances : cycle de vie, impacts, matériaux et énergies.</p>
+    </header>
+
+    <div class="progress-zone">
+        <span class="label">Progression</span>
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <span class="count" id="progressCount">0 / 8</span>
+    </div>
+
+    <div id="exercisesContainer"></div>
+
+    <div class="score-panel" id="scorePanel">
+        <div class="score-circle">
+            <span class="big" id="scorePct">0%</span>
+            <span class="label">de réussite</span>
+        </div>
+        <div class="score-msg" id="scoreMsg"></div>
+        <div class="score-detail" id="scoreDetail"></div>
+        <div class="btn-row" style="justify-content:center;">
+            <button class="btn btn-primary" onclick="resetAll()">Recommencer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA: 8 exercises covering all 4 fiches
+// ═══════════════════════════════════════════════
+
+const exercises = [
+    // ── EXERCICE 1 : Cycle de vie – Ordonner ──
+    {
+        fiche: 1,
+        ficheLabel: "Cycle de vie",
+        type: "Remettre dans l'ordre",
+        question: "Replace les 5 étapes du cycle de vie d'un objet technique dans le bon ordre :",
+        kind: "order",
+        items: [
+            "Utilisation",
+            "Fabrication",
+            "Extraction des matières premières",
+            "Fin de vie",
+            "Distribution (transport + stockage)"
+        ],
+        correctOrder: [
+            "Extraction des matières premières",
+            "Fabrication",
+            "Distribution (transport + stockage)",
+            "Utilisation",
+            "Fin de vie"
+        ],
+        feedback: "Le cycle de vie suit 5 étapes : extraction → fabrication → distribution → utilisation → fin de vie."
+    },
+    // ── EXERCICE 2 : Impacts – QCM ──
+    {
+        fiche: 2,
+        ficheLabel: "Impacts",
+        type: "QCM",
+        question: "Quelles sont les deux types de solutions proposées pour réduire les impacts négatifs d'un objet technique tout au long de son cycle de vie ?",
+        kind: "qcm",
+        options: [
+            "L'éco-conception et l'éco-citoyenneté",
+            "L'obsolescence programmée et le recyclage",
+            "L'importation et la mondialisation",
+            "La publicité et la surconsommation"
+        ],
+        correct: 0,
+        feedback: "L'éco-conception (agir dès la fabrication) et l'éco-citoyenneté (agir en tant qu'utilisateur) sont les deux leviers du développement durable."
+    },
+    // ── EXERCICE 3 : Matériaux – Glisser-déposer ──
+    {
+        fiche: 3,
+        ficheLabel: "Matériaux",
+        type: "Glisser-déposer",
+        question: "Classe chaque matériau dans sa famille :",
+        kind: "drag-classify",
+        categories: ["Organiques naturels", "Organiques artificiels", "Métaux", "Céramiques", "Composites"],
+        items: [
+            { text: "Bois", cat: "Organiques naturels" },
+            { text: "Plastique", cat: "Organiques artificiels" },
+            { text: "Acier (alliage)", cat: "Métaux" },
+            { text: "Verre", cat: "Céramiques" },
+            { text: "Fibre de carbone", cat: "Composites" },
+            { text: "Laine", cat: "Organiques naturels" },
+            { text: "Cuivre", cat: "Métaux" },
+            { text: "Béton armé", cat: "Composites" }
+        ],
+        feedback: "Les 5 familles de matériaux sont : organiques naturels, organiques artificiels (plastiques), métaux, céramiques/minéraux et composites."
+    },
+    // ── EXERCICE 4 : Énergies – Glisser-déposer ──
+    {
+        fiche: 4,
+        ficheLabel: "Énergies",
+        type: "Glisser-déposer",
+        question: "Classe chaque source d'énergie selon qu'elle est renouvelable ou non renouvelable :",
+        kind: "drag-classify",
+        categories: ["Renouvelable", "Non renouvelable"],
+        items: [
+            { text: "Solaire", cat: "Renouvelable" },
+            { text: "Pétrole", cat: "Non renouvelable" },
+            { text: "Éolien (vent)", cat: "Renouvelable" },
+            { text: "Charbon", cat: "Non renouvelable" },
+            { text: "Géothermie", cat: "Renouvelable" },
+            { text: "Gaz naturel", cat: "Non renouvelable" },
+            { text: "Hydraulique (eau)", cat: "Renouvelable" },
+            { text: "Uranium", cat: "Non renouvelable" },
+            { text: "Biomasse", cat: "Renouvelable" }
+        ],
+        feedback: "Les énergies renouvelables (solaire, éolien, hydraulique, géothermie, biomasse) se renouvellent rapidement. Les non renouvelables (pétrole, charbon, gaz, uranium) s'épuisent."
+    },
+    // ── EXERCICE 5 : Impacts – Vrai/Faux ──
+    {
+        fiche: 2,
+        ficheLabel: "Impacts",
+        type: "Vrai ou Faux",
+        question: "Indique si chaque affirmation est vraie ou fausse :",
+        kind: "truefalse",
+        statements: [
+            { text: "Seule l'étape de fabrication a un impact environnemental.", answer: false },
+            { text: "Le développement durable vise à organiser la société pour qu'elle puisse exister sur le long terme.", answer: true },
+            { text: "Éteindre un appareil en veille est un geste d'éco-citoyenneté.", answer: true },
+            { text: "Changer de smartphone par effet de mode est une attitude éco-responsable.", answer: false },
+            { text: "L'éco-conception consiste à penser aux impacts à chaque étape du cycle de vie.", answer: true }
+        ],
+        feedback: "Toutes les étapes du cycle de vie ont des impacts. L'éco-citoyenneté et l'éco-conception sont des réponses concrètes au développement durable."
+    },
+    // ── EXERCICE 6 : Matériaux – QCM ──
+    {
+        fiche: 3,
+        ficheLabel: "Matériaux",
+        type: "QCM",
+        question: "Pour identifier un matériau, on peut effectuer des tests. Lesquels parmi les suivants ?",
+        kind: "qcm",
+        options: [
+            "Test de conductibilité électrique et test à l'aimant",
+            "Test de goût et test de couleur",
+            "Test de poids et test de taille",
+            "Test d'odeur et test de son"
+        ],
+        correct: 0,
+        feedback: "On identifie les matériaux par l'observation et des tests : conductibilité électrique, conductibilité thermique, attraction par un aimant, façonnage."
+    },
+    // ── EXERCICE 7 : Cycle de vie – Texte à trous ──
+    {
+        fiche: 1,
+        ficheLabel: "Cycle de vie",
+        type: "Texte à trous",
+        question: "Complète le texte avec les mots proposés :",
+        kind: "fill-blanks",
+        template: "Le cycle de vie d'un objet est une succession de {0} étapes : l'extraction des {1}, la {2}, la distribution, l'{3} et la {4}.",
+        blanks: ["5", "matières premières", "fabrication", "utilisation", "fin de vie"],
+        distractors: ["3", "énergies", "commercialisation", "réparation", "destruction"],
+        feedback: "Le cycle de vie comporte 5 étapes : extraction des matières premières → fabrication → distribution → utilisation → fin de vie."
+    },
+    // ── EXERCICE 8 : Énergies – QCM ──
+    {
+        fiche: 4,
+        ficheLabel: "Énergies",
+        type: "QCM",
+        question: "Qu'est-ce qui distingue une source d'énergie renouvelable d'une source non renouvelable ?",
+        kind: "qcm",
+        options: [
+            "Une énergie renouvelable se renouvelle assez vite pour être considérée comme inépuisable à l'échelle humaine.",
+            "Une énergie renouvelable est toujours gratuite.",
+            "Une énergie renouvelable ne produit jamais de pollution.",
+            "Une énergie renouvelable vient toujours du soleil."
+        ],
+        correct: 0,
+        feedback: "Une source d'énergie est renouvelable quand elle se renouvelle assez rapidement pour être considérée comme inépuisable à l'échelle du temps humain."
+    }
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+
+let answeredCount = 0;
+let correctCount = 0;
+const totalExercises = exercises.length;
+
+function updateProgress() {
+    const pct = (answeredCount / totalExercises) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = `${answeredCount} / ${totalExercises}`;
+    if (answeredCount === totalExercises) {
+        setTimeout(showScore, 600);
+    }
+}
+
+function showScore() {
+    const pct = Math.round((correctCount / totalExercises) * 100);
+    document.getElementById('scorePct').textContent = pct + '%';
+    let msg, detail;
+    if (pct >= 80) {
+        msg = "Excellent travail !";
+        detail = `Tu as réussi ${correctCount} exercice(s) sur ${totalExercises}. Tu maîtrises bien ces notions pour le DNB.`;
+    } else if (pct >= 50) {
+        msg = "Bien, continue tes efforts !";
+        detail = `Tu as réussi ${correctCount} exercice(s) sur ${totalExercises}. Revois les fiches où tu as eu des erreurs.`;
+    } else {
+        msg = "Il faut encore réviser…";
+        detail = `Tu as réussi ${correctCount} exercice(s) sur ${totalExercises}. Relis attentivement les fiches de connaissances.`;
+    }
+    document.getElementById('scoreMsg').textContent = msg;
+    document.getElementById('scoreDetail').textContent = detail;
+    document.getElementById('scorePanel').classList.add('show');
+}
+
+function resetAll() {
+    answeredCount = 0;
+    correctCount = 0;
+    document.getElementById('scorePanel').classList.remove('show');
+    updateProgress();
+    renderAll();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════
+
+const ficheClasses = { 1: 'f1', 2: 'f2', 3: 'f3', 4: 'f4' };
+
+function renderAll() {
+    const container = document.getElementById('exercisesContainer');
+    container.innerHTML = '';
+    exercises.forEach((ex, i) => {
+        const card = document.createElement('div');
+        card.className = 'exercise-card';
+        card.id = `ex-${i}`;
+        card.innerHTML = `
+            <div class="card-header">
+                <span class="fiche-badge ${ficheClasses[ex.fiche]}">Fiche ${ex.fiche} – ${ex.ficheLabel}</span>
+                <span class="exercise-type">${ex.type}</span>
+            </div>
+            <div class="card-body">
+                <div class="question-text">${ex.question}</div>
+                <div id="ex-content-${i}"></div>
+                <div class="feedback" id="ex-feedback-${i}"></div>
+            </div>
+        `;
+        container.appendChild(card);
+        renderExercise(ex, i);
+    });
+}
+
+function renderExercise(ex, idx) {
+    const area = document.getElementById(`ex-content-${idx}`);
+    switch (ex.kind) {
+        case 'qcm': renderQCM(ex, idx, area); break;
+        case 'order': renderOrder(ex, idx, area); break;
+        case 'drag-classify': renderDragClassify(ex, idx, area); break;
+        case 'truefalse': renderTrueFalse(ex, idx, area); break;
+        case 'fill-blanks': renderFillBlanks(ex, idx, area); break;
+    }
+}
+
+// ── QCM ──
+function renderQCM(ex, idx, area) {
+    const letters = ['A', 'B', 'C', 'D'];
+    let html = '<div class="options-list">';
+    ex.options.forEach((opt, oi) => {
+        html += `<button class="option-btn" data-idx="${idx}" data-opt="${oi}" onclick="checkQCM(${idx}, ${oi}, this)">
+            <span class="option-letter">${letters[oi]}</span>
+            <span>${opt}</span>
+        </button>`;
+    });
+    html += '</div>';
+    area.innerHTML = html;
+}
+
+function checkQCM(idx, chosen, btn) {
+    const ex = exercises[idx];
+    const btns = document.querySelectorAll(`[data-idx="${idx}"]`);
+    btns.forEach(b => b.classList.add('disabled'));
+    if (chosen === ex.correct) {
+        btn.classList.add('correct');
+        showFeedback(idx, 'success', '✓ Bonne réponse ! ' + ex.feedback);
+        correctCount++;
+    } else {
+        btn.classList.add('wrong');
+        btns[ex.correct].classList.add('correct');
+        showFeedback(idx, 'error', '✗ Mauvaise réponse. ' + ex.feedback);
+    }
+    answeredCount++;
+    updateProgress();
+}
+
+// ── ORDER ──
+function renderOrder(ex, idx, area) {
+    const shuffled = [...ex.items].sort(() => Math.random() - 0.5);
+    let html = '<div class="order-list" id="order-list-' + idx + '">';
+    shuffled.forEach((item, i) => {
+        html += `<div class="order-item" draggable="true" data-value="${item}" data-idx="${idx}">
+            <span class="num">${i + 1}</span>
+            <span>${item}</span>
+        </div>`;
+    });
+    html += '</div>';
+    html += `<div class="btn-row"><button class="btn btn-primary" onclick="checkOrder(${idx})">Vérifier</button></div>`;
+    area.innerHTML = html;
+
+    // Drag reorder
+    const list = document.getElementById(`order-list-${idx}`);
+    let dragItem = null;
+
+    list.querySelectorAll('.order-item').forEach(item => {
+        item.addEventListener('dragstart', e => {
+            dragItem = item;
+            setTimeout(() => item.style.opacity = '0.4', 0);
+        });
+        item.addEventListener('dragend', () => {
+            item.style.opacity = '1';
+            list.querySelectorAll('.order-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        item.addEventListener('dragover', e => {
+            e.preventDefault();
+            item.classList.add('drag-over');
+        });
+        item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+        item.addEventListener('drop', e => {
+            e.preventDefault();
+            item.classList.remove('drag-over');
+            if (dragItem && dragItem !== item) {
+                const allItems = [...list.children];
+                const fromIdx = allItems.indexOf(dragItem);
+                const toIdx = allItems.indexOf(item);
+                if (fromIdx < toIdx) {
+                    list.insertBefore(dragItem, item.nextSibling);
+                } else {
+                    list.insertBefore(dragItem, item);
+                }
+                // Renumber
+                list.querySelectorAll('.order-item .num').forEach((n, i) => n.textContent = i + 1);
+            }
+        });
+
+        // Touch support
+        let touchClone = null;
+        let touchStartY = 0;
+        item.addEventListener('touchstart', e => {
+            dragItem = item;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        item.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            list.querySelectorAll('.order-item').forEach(el => el.classList.remove('drag-over'));
+            if (elBelow && elBelow.closest('.order-item')) {
+                elBelow.closest('.order-item').classList.add('drag-over');
+            }
+        }, { passive: false });
+        item.addEventListener('touchend', e => {
+            const touch = e.changedTouches[0];
+            const elBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            list.querySelectorAll('.order-item').forEach(el => el.classList.remove('drag-over'));
+            if (elBelow) {
+                const target = elBelow.closest('.order-item');
+                if (target && target !== dragItem) {
+                    const allItems = [...list.children];
+                    const fromIdx = allItems.indexOf(dragItem);
+                    const toIdx = allItems.indexOf(target);
+                    if (fromIdx < toIdx) {
+                        list.insertBefore(dragItem, target.nextSibling);
+                    } else {
+                        list.insertBefore(dragItem, target);
+                    }
+                    list.querySelectorAll('.order-item .num').forEach((n, i) => n.textContent = i + 1);
+                }
+            }
+        });
+    });
+}
+
+function checkOrder(idx) {
+    const ex = exercises[idx];
+    const list = document.getElementById(`order-list-${idx}`);
+    const items = list.querySelectorAll('.order-item');
+    let allCorrect = true;
+    items.forEach((item, i) => {
+        item.setAttribute('draggable', 'false');
+        item.style.cursor = 'default';
+        if (item.dataset.value === ex.correctOrder[i]) {
+            item.classList.add('correct-pos');
+        } else {
+            item.classList.add('wrong-pos');
+            allCorrect = false;
+        }
+    });
+    // Disable button
+    list.parentElement.querySelector('.btn').style.display = 'none';
+
+    if (allCorrect) {
+        showFeedback(idx, 'success', '✓ Parfait ! ' + ex.feedback);
+        correctCount++;
+    } else {
+        showFeedback(idx, 'error', '✗ L\'ordre n\'est pas tout à fait correct. ' + ex.feedback);
+    }
+    answeredCount++;
+    updateProgress();
+}
+
+// ── DRAG-CLASSIFY ──
+function renderDragClassify(ex, idx, area) {
+    const shuffled = [...ex.items].sort(() => Math.random() - 0.5);
+
+    let html = `<div class="drag-zone" id="drag-source-${idx}">`;
+    shuffled.forEach((item, i) => {
+        html += `<span class="drag-item" draggable="true" data-text="${item.text}" data-cat="${item.cat}" id="di-${idx}-${i}">${item.text}</span>`;
+    });
+    html += '</div><div class="drop-targets">';
+    ex.categories.forEach((cat, ci) => {
+        html += `<div class="drop-row">
+            <span class="drop-label">${cat}</span>
+            <div class="drop-target" data-cat="${cat}" id="dt-${idx}-${ci}"></div>
+        </div>`;
+    });
+    html += '</div>';
+    html += `<div class="btn-row"><button class="btn btn-primary" onclick="checkDragClassify(${idx})">Vérifier</button></div>`;
+    area.innerHTML = html;
+
+    // Wire up drag events
+    const source = document.getElementById(`drag-source-${idx}`);
+    const targets = area.querySelectorAll('.drop-target');
+    let dragEl = null;
+
+    area.querySelectorAll('.drag-item').forEach(di => {
+        di.addEventListener('dragstart', e => {
+            dragEl = di;
+            e.dataTransfer.setData('text/plain', di.id);
+            setTimeout(() => di.style.opacity = '0.4', 0);
+        });
+        di.addEventListener('dragend', () => {
+            di.style.opacity = '1';
+        });
+    });
+
+    [...targets, source].forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('over');
+            const id = e.dataTransfer.getData('text/plain');
+            const el = document.getElementById(id);
+            if (el) {
+                zone.appendChild(el);
+                el.classList.toggle('placed', zone !== source);
+            }
+        });
+    });
+
+    // Touch support for drag items
+    area.querySelectorAll('.drag-item').forEach(di => {
+        let touchOffsetX = 0, touchOffsetY = 0;
+        let ghost = null;
+
+        di.addEventListener('touchstart', e => {
+            dragEl = di;
+            const rect = di.getBoundingClientRect();
+            touchOffsetX = e.touches[0].clientX - rect.left;
+            touchOffsetY = e.touches[0].clientY - rect.top;
+        }, { passive: true });
+
+        di.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            // Highlight target
+            [...targets, source].forEach(z => z.classList.remove('over'));
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (el) {
+                const zone = el.closest('.drop-target') || el.closest('.drag-zone');
+                if (zone) zone.classList.add('over');
+            }
+        }, { passive: false });
+
+        di.addEventListener('touchend', e => {
+            const touch = e.changedTouches[0];
+            [...targets, source].forEach(z => z.classList.remove('over'));
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (el) {
+                const zone = el.closest('.drop-target') || el.closest('.drag-zone');
+                if (zone && dragEl) {
+                    zone.appendChild(dragEl);
+                    dragEl.classList.toggle('placed', !zone.classList.contains('drag-zone'));
+                }
+            }
+        });
+    });
+}
+
+function checkDragClassify(idx) {
+    const ex = exercises[idx];
+    const area = document.getElementById(`ex-content-${idx}`);
+    const targets = area.querySelectorAll('.drop-target');
+    let allCorrect = true;
+    let totalItems = ex.items.length;
+    let correctItems = 0;
+
+    targets.forEach(t => {
+        const cat = t.dataset.cat;
+        t.querySelectorAll('.drag-item').forEach(di => {
+            di.setAttribute('draggable', 'false');
+            di.style.cursor = 'default';
+            if (di.dataset.cat === cat) {
+                di.classList.add('placed');
+                t.classList.add('correct-zone');
+                correctItems++;
+            } else {
+                di.style.borderColor = 'var(--wrong)';
+                di.style.background = 'var(--wrong-dim)';
+                di.style.color = 'var(--wrong)';
+                allCorrect = false;
+            }
+        });
+    });
+
+    // Check source zone leftover
+    const source = document.getElementById(`drag-source-${idx}`);
+    if (source.querySelectorAll('.drag-item').length > 0) {
+        allCorrect = false;
+    }
+
+    area.querySelector('.btn').style.display = 'none';
+
+    if (allCorrect) {
+        showFeedback(idx, 'success', '✓ Tout est bien classé ! ' + ex.feedback);
+        correctCount++;
+    } else if (correctItems > totalItems / 2) {
+        showFeedback(idx, 'partial', `⚠ ${correctItems}/${totalItems} éléments bien placés. ` + ex.feedback);
+    } else {
+        showFeedback(idx, 'error', `✗ ${correctItems}/${totalItems} éléments bien placés. ` + ex.feedback);
+    }
+    answeredCount++;
+    updateProgress();
+}
+
+// ── TRUE/FALSE ──
+function renderTrueFalse(ex, idx, area) {
+    let html = '';
+    ex.statements.forEach((st, si) => {
+        html += `<div class="tf-row" id="tf-${idx}-${si}">
+            <div class="tf-statement">${st.text}</div>
+            <div class="tf-btns">
+                <button class="tf-btn" onclick="pickTF(${idx}, ${si}, true, this)">Vrai</button>
+                <button class="tf-btn" onclick="pickTF(${idx}, ${si}, false, this)">Faux</button>
+            </div>
+        </div>`;
+    });
+    html += `<div class="btn-row"><button class="btn btn-primary" id="tf-check-${idx}" onclick="checkTF(${idx})" style="display:none">Voir le résultat</button></div>`;
+    area.innerHTML = html;
+    area._tfAnswers = {};
+}
+
+function pickTF(idx, si, val, btn) {
+    const area = document.getElementById(`ex-content-${idx}`);
+    const row = document.getElementById(`tf-${idx}-${si}`);
+    const btns = row.querySelectorAll('.tf-btn');
+    btns.forEach(b => { b.style.borderColor = ''; b.style.color = ''; b.style.background = ''; });
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.color = 'var(--accent)';
+    btn.style.background = 'var(--accent-dim)';
+    area._tfAnswers[si] = val;
+
+    // Show check button if all answered
+    if (Object.keys(area._tfAnswers).length === exercises[idx].statements.length) {
+        document.getElementById(`tf-check-${idx}`).style.display = '';
+    }
+}
+
+function checkTF(idx) {
+    const ex = exercises[idx];
+    const area = document.getElementById(`ex-content-${idx}`);
+    const answers = area._tfAnswers;
+    let allCorrect = true;
+
+    ex.statements.forEach((st, si) => {
+        const row = document.getElementById(`tf-${idx}-${si}`);
+        const btns = row.querySelectorAll('.tf-btn');
+        btns.forEach(b => b.classList.add('disabled'));
+
+        const userAnswer = answers[si];
+        const correct = st.answer;
+
+        // Reset styles
+        btns.forEach(b => { b.style.borderColor = ''; b.style.color = ''; b.style.background = ''; });
+
+        if (userAnswer === correct) {
+            // Highlight the user's button as correct
+            const correctBtn = correct ? btns[0] : btns[1];
+            correctBtn.classList.add('selected-correct');
+        } else {
+            allCorrect = false;
+            // Highlight user's wrong pick
+            const wrongBtn = userAnswer ? btns[0] : btns[1];
+            wrongBtn.classList.add('selected-wrong');
+            // Show correct answer
+            const rightBtn = correct ? btns[0] : btns[1];
+            rightBtn.classList.add('was-correct');
+        }
+    });
+
+    document.getElementById(`tf-check-${idx}`).style.display = 'none';
+
+    if (allCorrect) {
+        showFeedback(idx, 'success', '✓ Toutes les réponses sont correctes ! ' + ex.feedback);
+        correctCount++;
+    } else {
+        showFeedback(idx, 'error', '✗ Certaines réponses sont incorrectes. ' + ex.feedback);
+    }
+    answeredCount++;
+    updateProgress();
+}
+
+// ── FILL BLANKS ──
+function renderFillBlanks(ex, idx, area) {
+    // Create pool of words (correct + distractors), shuffled
+    const allWords = [...ex.blanks, ...ex.distractors].sort(() => Math.random() - 0.5);
+
+    let html = `<div class="drag-zone" id="fill-source-${idx}">`;
+    allWords.forEach((w, wi) => {
+        html += `<span class="drag-item" draggable="true" data-word="${w}" id="fw-${idx}-${wi}">${w}</span>`;
+    });
+    html += '</div><div class="fill-text" id="fill-text-${idx}">';
+
+    // Parse template
+    let parts = ex.template.split(/\{(\d+)\}/);
+    let blankIdx = 0;
+    for (let pi = 0; pi < parts.length; pi++) {
+        if (pi % 2 === 0) {
+            html += parts[pi];
+        } else {
+            html += `<span class="blank-slot" data-answer="${ex.blanks[parseInt(parts[pi])]}" id="bs-${idx}-${blankIdx}"></span>`;
+            blankIdx++;
+        }
+    }
+    html += '</div>';
+    html += `<div class="btn-row"><button class="btn btn-primary" onclick="checkFillBlanks(${idx})">Vérifier</button></div>`;
+    area.innerHTML = html;
+
+    // Drag logic
+    const source = document.getElementById(`fill-source-${idx}`);
+    const slots = area.querySelectorAll('.blank-slot');
+    let dragEl = null;
+
+    area.querySelectorAll('.drag-item').forEach(di => {
+        di.addEventListener('dragstart', e => {
+            dragEl = di;
+            e.dataTransfer.setData('text/plain', di.id);
+            setTimeout(() => di.style.opacity = '0.4', 0);
+        });
+        di.addEventListener('dragend', () => di.style.opacity = '1');
+
+        // Touch
+        di.addEventListener('touchstart', e => { dragEl = di; }, { passive: true });
+        di.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            [...slots, source].forEach(z => z.classList.remove('over'));
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (el) {
+                const zone = el.closest('.blank-slot') || el.closest('.drag-zone');
+                if (zone) zone.classList.add('over');
+            }
+        }, { passive: false });
+        di.addEventListener('touchend', e => {
+            const touch = e.changedTouches[0];
+            [...slots, source].forEach(z => z.classList.remove('over'));
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (el) {
+                const zone = el.closest('.blank-slot') || el.closest('.drag-zone');
+                if (zone && dragEl) {
+                    // If slot already has a word, put it back
+                    if (zone.classList.contains('blank-slot') && zone.querySelector('.drag-item')) {
+                        source.appendChild(zone.querySelector('.drag-item'));
+                    }
+                    zone.appendChild(dragEl);
+                    zone.classList.add('filled');
+                    dragEl.classList.add('placed');
+                }
+            }
+        });
+    });
+
+    [...slots, source].forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('over');
+            const id = e.dataTransfer.getData('text/plain');
+            const el = document.getElementById(id);
+            if (!el) return;
+            // If dropping on a slot that already has a word, send it back
+            if (zone.classList.contains('blank-slot') && zone.querySelector('.drag-item')) {
+                const existing = zone.querySelector('.drag-item');
+                source.appendChild(existing);
+                existing.classList.remove('placed');
+            }
+            zone.appendChild(el);
+            if (zone.classList.contains('blank-slot')) {
+                zone.classList.add('filled');
+                el.classList.add('placed');
+            } else {
+                el.classList.remove('placed');
+                zone.classList.remove('filled');
+            }
+        });
+    });
+}
+
+function checkFillBlanks(idx) {
+    const ex = exercises[idx];
+    const area = document.getElementById(`ex-content-${idx}`);
+    const slots = area.querySelectorAll('.blank-slot');
+    let allCorrect = true;
+
+    slots.forEach(slot => {
+        const answer = slot.dataset.answer;
+        const di = slot.querySelector('.drag-item');
+        if (di) di.setAttribute('draggable', 'false');
+        if (di && di.dataset.word === answer) {
+            slot.classList.add('correct-slot');
+        } else {
+            slot.classList.add('wrong-slot');
+            allCorrect = false;
+            // Show correct answer as text
+            const hint = document.createElement('span');
+            hint.style.cssText = 'font-size:0.75rem;color:var(--accent);margin-left:0.4rem;';
+            hint.textContent = `→ ${answer}`;
+            slot.appendChild(hint);
+        }
+    });
+
+    area.querySelectorAll('.drag-item').forEach(d => { d.setAttribute('draggable', 'false'); d.style.cursor = 'default'; });
+    area.querySelector('.btn').style.display = 'none';
+
+    if (allCorrect) {
+        showFeedback(idx, 'success', '✓ Tous les mots sont bien placés ! ' + ex.feedback);
+        correctCount++;
+    } else {
+        showFeedback(idx, 'error', '✗ Certains mots ne sont pas corrects. ' + ex.feedback);
+    }
+    answeredCount++;
+    updateProgress();
+}
+
+// ── FEEDBACK UTIL ──
+function showFeedback(idx, type, text) {
+    const fb = document.getElementById(`ex-feedback-${idx}`);
+    fb.className = `feedback show ${type}`;
+    fb.textContent = text;
+}
+
+// ── INIT ──
+renderAll();
+updateProgress();
+</script>
+</body>
+</html>
